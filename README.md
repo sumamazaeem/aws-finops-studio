@@ -46,6 +46,28 @@ FinOps Studio provides audience-specific lenses over the same governed evidence:
 - **Engineering**: Top cost drivers, Month-over-Month cost deltas (+/- $ and %), and actionable rightsizing.
 - **Leadership**: Executive cost trajectory, active optimization pipeline, and verified realized savings.
 
+## Automated Health & Anomaly Schedules
+
+FinOps Studio includes an integrated **Schedule Manager** with recurring cron support (`"cron": true` in `app.json`):
+
+1. **Daily Cost & Anomaly Pulse (`0 8 * * *`)**:
+   - Runs daily at 08:00 UTC.
+   - Audits live Month-to-Date spend, verifies service trajectories against prior month baselines, and flags any service that exceeds variance thresholds.
+   - Automatically saves an audit-ready `scheduled-pulse` checkpoint in local SQLite.
+2. **Weekly Executive & Backlog Digest (`0 9 * * 1`)**:
+   - Runs every Monday at 09:00 UTC.
+   - Evaluates active optimization backlog items from AWS Cost Optimization Hub and Compute Optimizer.
+3. **Configurable Anomaly Thresholds**:
+   - **Dollar Spike Threshold**: Flags any service whose cost grew by more than \$X (default: \$10.00).
+   - **Growth Percentage Threshold**: Flags any service expanding by more than Y% (default: 15.0%, min \$1.00 increase).
+4. **In-App Immediate Test Sweep**:
+   - Click **"⚡ Test Sweep Now"** inside the **Anomalies** tab to instantly execute a live evaluation rule against current AWS telemetry and generate a structured pulse report.
+5. **CLI Command Helper**:
+   - Copy-paste ready CLI snippets for running schedules via Kiro Crew daemon:
+   ```bash
+   kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse for active profile. Check for service cost spikes >$10 or >15%. Keep report concise and evidence-backed."
+   ```
+
 ## AWS Authentication, Multi-Profile Switching & Least-Privilege IAM
 
 AWS FinOps Studio is built with an enterprise least-privilege security model. It operates in 100% read-only mode and never mutates AWS infrastructure or purchases commitments.

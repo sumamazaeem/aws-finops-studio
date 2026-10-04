@@ -35,9 +35,10 @@
       "/apps/aws-finops-studio/api/evidence",
       "/apps/aws-finops-studio/api/calculate",
       "/apps/aws-finops-studio/api/profiles",
-      "/apps/aws-finops-studio/api/policies"
+      "/apps/aws-finops-studio/api/policies",
+      "/apps/aws-finops-studio/api/schedules"
     ],
-    "events": [], "storage": true, "cron": false, "memory": "app-scoped", "network": false,
+    "events": [], "storage": true, "cron": true, "memory": "app-scoped", "network": false,
     "sessionApproval": false, "spawn": false, "jobs": false
   }
 }

@@ -25,6 +25,20 @@ type ProfilesData={
   activeRegion:string;
   callerIdentity?:CallerIdentity;
 }
+type ScheduleConfig={
+  enabled:boolean;
+  frequency:'daily'|'weekly';
+  cronExpression:string;
+  thresholdDollars:string;
+  thresholdPercent:string;
+  lastRun:string|null;
+  lastStatus:'clean'|'alert'|null;
+  lastSummary:string|null;
+  cliCommands:{
+    daily:string;
+    weekly:string;
+  };
+}
 type Overview={
   mode:'live'|'demo';
   dataAvailable:boolean;
@@ -85,6 +99,9 @@ export default function App(){
   const [reports,setReports]=useState<any[]>([]); const [selectedReport,setSelectedReport]=useState<any|null>(null); const [generatingReport,setGeneratingReport]=useState<string|null>(null)
   const [profilesData,setProfilesData]=useState<ProfilesData|null>(null)
   const [policiesData,setPoliciesData]=useState<{activeProfile:string;activeRegion:string;policies:PolicyTemplate[]}|null>(null)
+  const [scheduleConfig,setScheduleConfig]=useState<ScheduleConfig|null>(null)
+  const [runningSweep,setRunningSweep]=useState(false)
+  const [sweepResult,setSweepResult]=useState<any|null>(null)
 
   const loadData = () => {
     setOverview(null); setError(''); const base='/apps/aws-finops-studio/api'; const mode=demo?'demo':'live';
@@ -95,11 +112,36 @@ export default function App(){
       api.get(`${base}/reports`),
       api.get(`${base}/diagnostics`),
       api.get(`${base}/profiles`),
-      api.get(`${base}/policies`)
-    ]).then(([o,r,e,rep,d,profs,pols]:any[])=>{
+      api.get(`${base}/policies`),
+      api.get(`${base}/schedules`)
+    ]).then(([o,r,e,rep,d,profs,pols,sched]:any[])=>{
       setOverview(o); setRecs(r.items); setEvidenceRuns(e?.runs||[]); setReports(rep?.items||[]); setDiag(d)
-      setProfilesData(profs); setPoliciesData(pols)
+      setProfilesData(profs); setPoliciesData(pols); setScheduleConfig(sched)
     }).catch((e:any)=>setError(e.message||'Unable to load FinOps data'))
+  }
+
+  const updateSchedule=async(updates:Partial<ScheduleConfig>)=>{
+    try{
+      const res:any=await api.post('/apps/aws-finops-studio/api/schedules',updates);
+      if(res?.schedule) setScheduleConfig(res.schedule);
+    }catch(e:any){
+      setError(e.message||'Failed to update schedule');
+    }
+  }
+
+  const triggerSweep=async()=>{
+    setRunningSweep(true); setSweepResult(null); setError('');
+    try{
+      const res:any=await api.post('/apps/aws-finops-studio/api/schedules',{action:'trigger'});
+      setSweepResult(res);
+      if(res?.schedule) setScheduleConfig(res.schedule);
+      const repRes:any=await api.get('/apps/aws-finops-studio/api/reports');
+      if(repRes?.items) setReports(repRes.items);
+    }catch(e:any){
+      setError(e.message||'Failed to run anomaly sweep');
+    }finally{
+      setRunningSweep(false);
+    }
   }
 
   useEffect(()=>{
@@ -179,13 +221,34 @@ export default function App(){
       />
     )
     if(tab==='Ask FinOps') return <Ask onAsk={ask}/>
-    if(tab==='Anomalies') return overview.mode==='demo'?<Anomalies items={overview.anomalies}/>:<Setup title="Live anomaly analysis" text="Query AWS Cost Anomaly Detection and Cost Explorer. No synthetic anomalies are shown in Live mode." action={()=>ask('Use live AWS data only. Analyze current cost anomalies and preserve the API evidence. Do not use demo data.')}/>
+    if(tab==='Anomalies') return (
+      <AnomaliesPage
+        scheduleConfig={scheduleConfig}
+        onUpdateSchedule={updateSchedule}
+        onTriggerSweep={triggerSweep}
+        runningSweep={runningSweep}
+        sweepResult={sweepResult}
+        demo={demo}
+        anomalies={overview.anomalies}
+        onAsk={ask}
+      />
+    )
     if(tab==='Cost Explorer') return overview.mode==='demo'?<Drivers items={overview.drivers}/>:overview.dataAvailable?<LiveDrivers drivers={overview.drivers} previous={overview.previousDrivers||[]} onRefresh={refreshLive} refreshing={refreshing}/>:<ApprovalPanel onRefresh={refreshLive} refreshing={refreshing}/>
     if(tab==='Commitments') return <Setup title="Commitment intelligence" text="Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed." action={()=>ask('Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.')}/>
     if(tab==='Well-Architected') return <Setup title="Cost Optimization review" text="Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance." action={()=>ask('Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.')}/>
-    if(tab==='Reports') return <ReportsView reports={reports} selectedReport={selectedReport} onSelectReport={setSelectedReport} onGenerate={generateReport} generating={generatingReport} onAskAgent={()=>ask('Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.')}/>
+    if(tab==='Reports') return (
+      <ReportsView
+        reports={reports}
+        selectedReport={selectedReport}
+        onSelectReport={setSelectedReport}
+        onGenerate={generateReport}
+        generating={generatingReport}
+        onAskAgent={()=>ask('Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.')}
+        onOpenSchedules={()=>setTab('Anomalies')}
+      />
+    )
     return <Setup title="FinOps reports" text="Generate weekly, monthly, executive, or optimization-backlog reports from live evidence." action={()=>ask('Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.')}/>
-  },[tab,overview,recs,evidenceRuns,reports,selectedReport,generatingReport,diag,profilesData,policiesData,demo,persona,refreshing])
+  },[tab,overview,recs,evidenceRuns,reports,selectedReport,generatingReport,diag,profilesData,policiesData,demo,persona,refreshing,scheduleConfig,runningSweep,sweepResult])
 
   const activeIdentity = overview?.callerIdentity || diag?.callerIdentity
 
@@ -1152,23 +1215,333 @@ function Ask({onAsk}:{onAsk:(x:string)=>void}){
   )
 }
 
-function Anomalies({items}:{items:Overview['anomalies']}){
+function ScheduleManager({
+  config,
+  onUpdate,
+  onTriggerSweep,
+  runningSweep,
+  sweepResult
+}: {
+  config: ScheduleConfig | null
+  onUpdate: (updates: Partial<ScheduleConfig>) => Promise<void>
+  onTriggerSweep: () => Promise<void>
+  runningSweep: boolean
+  sweepResult: any | null
+}) {
+  const [enabled, setEnabled] = useState(config?.enabled || false)
+  const [frequency, setFrequency] = useState<'daily' | 'weekly'>(config?.frequency || 'daily')
+  const [dollars, setDollars] = useState(config?.thresholdDollars || '10.00')
+  const [percent, setPercent] = useState(config?.thresholdPercent || '15.0')
+  const [saving, setSaving] = useState(false)
+  const [saveMsg, setSaveMsg] = useState<string | null>(null)
+  const [copiedCli, setCopiedCli] = useState(false)
+
+  useEffect(() => {
+    if (config) {
+      setEnabled(config.enabled)
+      setFrequency(config.frequency)
+      setDollars(config.thresholdDollars)
+      setPercent(config.thresholdPercent)
+    }
+  }, [config])
+
+  const handleSave = async (overrideEnabled?: boolean) => {
+    setSaving(true)
+    setSaveMsg(null)
+    try {
+      const isEn = overrideEnabled !== undefined ? overrideEnabled : enabled
+      await onUpdate({
+        enabled: isEn,
+        frequency,
+        thresholdDollars: dollars,
+        thresholdPercent: percent
+      })
+      setSaveMsg(isEn ? 'Schedule active & configured' : 'Schedule paused')
+      setTimeout(() => setSaveMsg(null), 3000)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const toggleEnabled = () => {
+    const next = !enabled
+    setEnabled(next)
+    handleSave(next)
+  }
+
+  const activeCliCommand = frequency === 'daily'
+    ? config?.cliCommands?.daily || 'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse."'
+    : config?.cliCommands?.weekly || 'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest."'
+
+  const copyCliCommand = () => {
+    navigator.clipboard?.writeText(activeCliCommand)
+    setCopiedCli(true)
+    setTimeout(() => setCopiedCli(false), 2500)
+  }
+
   return (
-    <div className="px-6 py-6 space-y-3">
-      {items.map(x=>(
-        <Card key={x.date+x.service}>
-          <div className="flex justify-between">
-            <div>
-              <CardTitle>{x.service}</CardTitle>
-              <p className="text-sm text-muted mt-2">{x.summary}</p>
-            </div>
-            <div className="text-right">
-              <b>{usd(x.impact)}</b>
-              <div className="text-xs text-muted">estimated impact · {x.date}</div>
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border">
+        <div>
+          <div className="flex items-center gap-2">
+            <CardTitle>Automated Health & Anomaly Schedules</CardTitle>
+            <Badge tone={enabled ? 'success' : 'default'}>
+              {enabled ? 'Active · Scheduled' : 'Paused / Off'}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted mt-1">
+            Configure automated recurring sweeps to monitor cost trajectory, detect spikes, and generate audit-ready pulses.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleEnabled}
+            disabled={saving}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              enabled
+                ? 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/40 hover:bg-emerald-500/25'
+                : 'bg-surface-muted text-muted border border-border hover:bg-surface-muted/80'
+            }`}
+          >
+            {enabled ? '● Schedule: ON' : '○ Schedule: OFF'}
+          </button>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mt-4">
+        {/* Left Column: Frequency & Threshold Controls */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
+              Sweep Frequency & Cadence
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setFrequency('daily')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  frequency === 'daily'
+                    ? 'border-accent bg-accent/10 text-accent font-medium'
+                    : 'border-border bg-surface-muted/30 text-muted hover:border-border/80'
+                }`}
+              >
+                <div className="text-xs font-bold text-foreground">Daily Pulse</div>
+                <div className="text-[11px] text-muted mt-0.5 font-mono">08:00 UTC (0 8 * * *)</div>
+                <div className="text-[10px] text-muted mt-1">Spike alert & MoM delta</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFrequency('weekly')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  frequency === 'weekly'
+                    ? 'border-accent bg-accent/10 text-accent font-medium'
+                    : 'border-border bg-surface-muted/30 text-muted hover:border-border/80'
+                }`}
+              >
+                <div className="text-xs font-bold text-foreground">Weekly Digest</div>
+                <div className="text-[11px] text-muted mt-0.5 font-mono">Mon 09:00 UTC (0 9 * * 1)</div>
+                <div className="text-[10px] text-muted mt-1">Full executive backlog</div>
+              </button>
             </div>
           </div>
-        </Card>
-      ))}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Dollar Spike Threshold ($)
+              </label>
+              <div className="relative">
+                <span className="absolute left-2.5 top-2 text-xs text-muted">$</span>
+                <input
+                  type="text"
+                  value={dollars}
+                  onChange={(e) => setDollars(e.target.value)}
+                  placeholder="10.00"
+                  className="w-full bg-surface-muted/60 border border-border rounded-lg pl-6 pr-3 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
+              <p className="text-[10px] text-muted mt-1">Alert if service grows by &gt; amount</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Variance Growth Threshold (%)
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={percent}
+                  onChange={(e) => setPercent(e.target.value)}
+                  placeholder="15.0"
+                  className="w-full bg-surface-muted/60 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <span className="absolute right-2.5 top-2 text-xs text-muted">%</span>
+              </div>
+              <p className="text-[10px] text-muted mt-1">Alert if growth &gt; % (min $1.00)</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <Btn onClick={() => handleSave()} disabled={saving}>
+              {saving ? 'Saving…' : 'Save Schedule Settings'}
+            </Btn>
+            <button
+              onClick={onTriggerSweep}
+              disabled={runningSweep}
+              className="px-3 py-2 rounded-lg border border-accent/40 bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors flex items-center gap-1.5"
+            >
+              <span>{runningSweep ? 'Scanning Telemetry…' : '⚡ Test Sweep Now'}</span>
+            </button>
+          </div>
+
+          {saveMsg && (
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center gap-2">
+              <span>✓</span>
+              <span>{saveMsg}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column: Execution History & CLI Command Helper */}
+        <div className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-surface-muted/40 border border-border">
+            <div className="flex items-center justify-between text-xs font-semibold mb-2">
+              <span>Latest Sweep Status</span>
+              {config?.lastStatus ? (
+                <Badge tone={config.lastStatus === 'clean' ? 'success' : 'alert'}>
+                  {config.lastStatus === 'clean' ? 'Normal Baseline' : 'Threshold Exceeded'}
+                </Badge>
+              ) : (
+                <span className="text-[11px] text-muted">No runs yet</span>
+              )}
+            </div>
+            {config?.lastRun ? (
+              <div className="space-y-1 text-xs">
+                <div className="text-muted text-[11px] font-mono">Last Run: {config.lastRun}</div>
+                <p className="text-xs text-foreground mt-1 leading-relaxed">{config.lastSummary}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted leading-relaxed">
+                Run an immediate test sweep or enable recurring schedules to record telemetry checkpoints in SQLite.
+              </p>
+            )}
+
+            {sweepResult && (
+              <div className="mt-3 pt-3 border-t border-border/80 text-xs space-y-1">
+                <div className="font-semibold flex items-center gap-1.5 text-foreground">
+                  <span>{sweepResult.isAlert ? '⚠️' : '✓'}</span>
+                  <span>Test Sweep Result: {sweepResult.isAlert ? 'Threshold Flagged' : 'Clean Baseline'}</span>
+                </div>
+                <p className="text-muted text-[11px] leading-relaxed">{sweepResult.summary}</p>
+              </div>
+            )}
+          </div>
+
+          {/* CLI Helper */}
+          <div className="p-3.5 rounded-xl bg-surface-muted/60 border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-foreground">CLI Command Helper</span>
+              <button
+                onClick={copyCliCommand}
+                className="text-accent hover:underline text-xs font-medium"
+              >
+                {copiedCli ? '✓ Copied' : '📋 Copy Command'}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted leading-relaxed">
+              Prefer managing background jobs via CLI? Copy and run this command in your terminal:
+            </p>
+            <pre className="p-2.5 rounded-lg bg-surface border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap select-all">
+              {activeCliCommand}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function AnomaliesPage({
+  scheduleConfig,
+  onUpdateSchedule,
+  onTriggerSweep,
+  runningSweep,
+  sweepResult,
+  demo,
+  anomalies,
+  onAsk
+}: {
+  scheduleConfig: ScheduleConfig | null
+  onUpdateSchedule: (updates: Partial<ScheduleConfig>) => Promise<void>
+  onTriggerSweep: () => Promise<void>
+  runningSweep: boolean
+  sweepResult: any | null
+  demo: boolean
+  anomalies: Overview['anomalies']
+  onAsk: (q: string) => void
+}) {
+  return (
+    <div className="px-6 py-6 space-y-6">
+      <ScheduleManager
+        config={scheduleConfig}
+        onUpdate={onUpdateSchedule}
+        onTriggerSweep={onTriggerSweep}
+        runningSweep={runningSweep}
+        sweepResult={sweepResult}
+      />
+
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">
+              {demo ? 'Synthetic Anomalies (Demo Mode)' : 'AWS Cost Anomaly Detection Status'}
+            </h3>
+            <p className="text-xs text-muted">
+              {demo
+                ? 'Sample anomaly scenarios demonstrating impact and root-cause attribution.'
+                : 'Monitored continuously against AWS Cost Anomaly Detection service and Cost Explorer.'}
+            </p>
+          </div>
+          {!demo && (
+            <button
+              onClick={() => onAsk('Analyze current cost anomalies and verify if any service exceeded variance thresholds.')}
+              className="px-3 py-1.5 rounded-lg border border-accent/40 bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
+            >
+              💬 Deep Anomaly Analysis in Agent
+            </button>
+          )}
+        </div>
+
+        {demo ? (
+          <div className="space-y-3">
+            {anomalies.map(x=>(
+              <Card key={x.date+x.service}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{x.service}</CardTitle>
+                    <p className="text-sm text-muted mt-2">{x.summary}</p>
+                  </div>
+                  <div className="text-right">
+                    <b>{usd(x.impact)}</b>
+                    <div className="text-xs text-muted">estimated impact · {x.date}</div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <div className="py-6 text-center max-w-md mx-auto space-y-2">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto text-lg font-bold">
+                ✓
+              </div>
+              <h4 className="text-sm font-semibold text-foreground">0 Active AWS Cost Anomalies</h4>
+              <p className="text-xs text-muted leading-relaxed">
+                AWS Cost Anomaly Detection has reported no severe unexpected spikes for this account scope. Recurring background sweeps will monitor telemetry as workloads run.
+              </p>
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }
@@ -1314,7 +1687,8 @@ function ReportsView({
   onSelectReport,
   onGenerate,
   generating,
-  onAskAgent
+  onAskAgent,
+  onOpenSchedules
 }: {
   reports: any[];
   selectedReport: any | null;
@@ -1322,6 +1696,7 @@ function ReportsView({
   onGenerate: (type: string) => void;
   generating: string | null;
   onAskAgent: () => void;
+  onOpenSchedules: () => void;
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -1399,6 +1774,13 @@ function ReportsView({
             className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-surface text-foreground transition-colors"
           >
             {generating === 'backlog' ? 'Generating Backlog…' : '↘ Generate Backlog Report'}
+          </button>
+          <button
+            onClick={onOpenSchedules}
+            className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-surface text-foreground transition-colors flex items-center gap-1.5"
+            title="Configure automated daily and weekly report schedules"
+          >
+            <span>⏱️ Automated Schedules</span>
           </button>
           <button
             onClick={onAskAgent}

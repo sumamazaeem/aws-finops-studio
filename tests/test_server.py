@@ -124,4 +124,48 @@ def test_policy_templates_and_structure(monkeypatch,tmp_path):
     assert parsed["Statement"][0]["Effect"]=="Allow"
     assert len(parsed["Statement"][0]["Action"])>10
 
+def test_schedule_config_and_anomaly_sweep(monkeypatch,tmp_path):
+    server=load_server(monkeypatch,tmp_path)
+    
+    # 1. Default config
+    cfg = server.get_schedule_config()
+    assert cfg["enabled"] is False
+    assert cfg["frequency"] == "daily"
+    assert "kirocrew cron" in cfg["cliCommands"]["daily"]
+
+    # 2. Update config
+    updated = server.update_schedule_config({
+        "enabled": True,
+        "frequency": "weekly",
+        "thresholdDollars": "25.00",
+        "thresholdPercent": "20.0"
+    })
+    assert updated["enabled"] is True
+    assert updated["frequency"] == "weekly"
+    assert updated["thresholdDollars"] == "25.00"
+    assert updated["cronExpression"] == "0 9 * * 1"
+
+    # 3. Anomaly sweep with mock live data (clean sweep)
+    monkeypatch.setattr(server, "live_cost_overview", lambda: {
+        "monthToDate": {"costBeforeCredits": "10.00", "credits": "0.00", "netCost": "10.00"},
+        "previousMonth": {"costBeforeCredits": "10.00"},
+        "serviceDeltas": [{"service": "EC2", "cost": "10.00", "previousCost": "10.00", "changePercent": 0.0}]
+    })
+    sweep_clean = server.run_anomaly_sweep()
+    assert sweep_clean["status"] == "clean"
+    assert sweep_clean["isAlert"] is False
+    assert sweep_clean["flaggedCount"] == 0
+
+    # 4. Anomaly sweep with spiked service (> threshold)
+    monkeypatch.setattr(server, "live_cost_overview", lambda: {
+        "monthToDate": {"costBeforeCredits": "50.00", "credits": "0.00", "netCost": "50.00"},
+        "previousMonth": {"costBeforeCredits": "10.00"},
+        "serviceDeltas": [{"service": "RDS", "cost": "45.00", "previousCost": "5.00", "changePercent": 800.0}]
+    })
+    sweep_alert = server.run_anomaly_sweep()
+    assert sweep_alert["status"] == "alert"
+    assert sweep_alert["isAlert"] is True
+    assert sweep_alert["flaggedCount"] == 1
+    assert sweep_alert["flaggedServices"][0]["service"] == "RDS"
+
 

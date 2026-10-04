@@ -687,6 +687,183 @@ def generate_report(report_type="executive", mode="live"):
         "evidenceRunId": evidence_id
     })
 
+def get_schedule_config():
+    init_db()
+    cfg = {
+        "enabled": False,
+        "frequency": "daily",
+        "cronExpression": "0 8 * * *",
+        "thresholdDollars": "10.00",
+        "thresholdPercent": "15.0",
+        "lastRun": None,
+        "lastStatus": None,
+        "lastSummary": None
+    }
+    try:
+        with sqlite3.connect(DB) as db:
+            rows = db.execute("SELECT key, value FROM app_config WHERE key LIKE 'schedule_%'").fetchall()
+            kv = dict(rows)
+            if "schedule_enabled" in kv:
+                cfg["enabled"] = kv["schedule_enabled"] == "true"
+            if "schedule_frequency" in kv:
+                cfg["frequency"] = kv["schedule_frequency"]
+            if "schedule_cron" in kv:
+                cfg["cronExpression"] = kv["schedule_cron"]
+            if "schedule_threshold_dollars" in kv:
+                cfg["thresholdDollars"] = kv["schedule_threshold_dollars"]
+            if "schedule_threshold_percent" in kv:
+                cfg["thresholdPercent"] = kv["schedule_threshold_percent"]
+            if "schedule_last_run" in kv:
+                cfg["lastRun"] = kv["schedule_last_run"]
+            if "schedule_last_status" in kv:
+                cfg["lastStatus"] = kv["schedule_last_status"]
+            if "schedule_last_summary" in kv:
+                cfg["lastSummary"] = kv["schedule_last_summary"]
+    except Exception:
+        pass
+
+    scope = get_active_scope()
+    profile = scope["profile"]
+    cfg["cliCommands"] = {
+        "daily": f'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse for profile {profile}. Check for service cost spikes >${cfg["thresholdDollars"]} or >{cfg["thresholdPercent"]}%. Keep report concise and evidence-backed."',
+        "weekly": f'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest and optimization backlog audit for profile {profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities."'
+    }
+    return cfg
+
+def update_schedule_config(data):
+    init_db()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(DB) as db:
+        if "enabled" in data:
+            db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_enabled', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", ("true" if data["enabled"] else "false", now_iso))
+        if "frequency" in data:
+            freq = data["frequency"]
+            cron_exp = "0 8 * * *" if freq == "daily" else "0 9 * * 1"
+            db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_frequency', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (freq, now_iso))
+            db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_cron', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (cron_exp, now_iso))
+        if "thresholdDollars" in data:
+            db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_threshold_dollars', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (str(data["thresholdDollars"]), now_iso))
+        if "thresholdPercent" in data:
+            db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_threshold_percent', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (str(data["thresholdPercent"]), now_iso))
+    return get_schedule_config()
+
+def run_anomaly_sweep():
+    now_iso = datetime.now(timezone.utc).isoformat()
+    today = date.today().isoformat()
+    cfg = get_schedule_config()
+    thresh_dollars = Decimal(str(cfg.get("thresholdDollars", "10.00")))
+    thresh_percent = Decimal(str(cfg.get("thresholdPercent", "15.0")))
+    scope_cfg = get_active_scope()
+    identity = _get_caller_identity(scope_cfg["profile"], scope_cfg["region"])
+    scope = f"Account {identity.get('accountMasked', scope_cfg['profile'])} · {scope_cfg['region']} · Profile: {scope_cfg['profile']}"
+
+    live = live_cost_overview()
+    if not live:
+        try:
+            live = refresh_live_cost_overview()
+        except Exception:
+            live = {}
+
+    mtd = (live or {}).get("monthToDate") or {}
+    prev = (live or {}).get("previousMonth") or {}
+    deltas = (live or {}).get("serviceDeltas") or []
+    evidence_id = (live or {}).get("evidenceRunId")
+
+    flagged_services = []
+    for d in deltas:
+        cost = Decimal(str(d.get("cost", 0)))
+        prev_cost = Decimal(str(d.get("previousCost", 0)))
+        diff = cost - prev_cost
+        pct = Decimal(str(d.get("changePercent", 0))) if d.get("changePercent") is not None else Decimal("0")
+        
+        if diff >= thresh_dollars or (pct >= thresh_percent and diff >= Decimal("1.00")):
+            flagged_services.append({
+                "service": d.get("service"),
+                "cost": str(cost),
+                "previousCost": str(prev_cost),
+                "dollarChange": str(diff),
+                "changePercent": float(pct)
+            })
+
+    is_alert = len(flagged_services) > 0
+    status = "alert" if is_alert else "clean"
+    summary_text = f"Anomaly sweep complete: {len(flagged_services)} service(s) exceeded threshold (>${thresh_dollars} or >{thresh_percent}%)." if is_alert else f"Anomaly sweep clean: all services within normal thresholds (threshold: >${thresh_dollars} or >{thresh_percent}%)."
+
+    content = f"""# Scheduled Cost & Anomaly Pulse - {today}
+
+**Scope:** {scope} · **Executed:** {now_iso} · **Status:** {'⚠️ THRESHOLD EXCEEDED' if is_alert else '✅ NORMAL BASELINE'}
+**Evaluation Rule:** Spike > ${thresh_dollars} OR Growth > {thresh_percent}% (min $1.00 increase)
+
+---
+
+## 1. Executive Telemetry Overview
+
+| Metric | Amount | Notes |
+|---|---|---|
+| MTD Gross Spend | ${(mtd.get('costBeforeCredits', '0.00'))} | UnblendedCost before adjustments |
+| MTD Credits Applied | ${(mtd.get('credits', '0.00'))} | Net billed: ${(mtd.get('netCost', '0.00'))} |
+| Prior Full Month Gross | ${(prev.get('costBeforeCredits', '0.00'))} | Baseline comparison |
+| Services Evaluated | {len(deltas)} services | Scanned from Cost Explorer telemetry |
+| Anomaly Threshold Flags | **{len(flagged_services)} flagged** | Services meeting alert trigger criteria |
+
+## 2. Anomaly Evaluation Results
+"""
+    if is_alert:
+        content += """
+| Service | Current Cost | Prior Month | Dollar Spike | Growth % |
+|---|---|---|---|---|
+"""
+        for f in flagged_services:
+            content += f"| {f['service']} | ${f['cost']} | ${f['previousCost']} | +${f['dollarChange']} | +{f['changePercent']:.1f}% |\n"
+        content += """
+### Recommended Investigation
+- Query CloudWatch metrics for the flagged services to identify spike drivers (e.g. EC2 instance launches, S3 bucket PUT requests, NAT Gateway data transfer).
+- Inspect whether recently deployed workloads or CI/CD pipelines generated unexpected traffic.
+"""
+    else:
+        content += f"""
+> [!NOTE]
+> **No Cost Anomalies Detected**
+>
+> All active AWS services are operating within normal baseline limits. No service exceeded the configured variance threshold of **>${thresh_dollars}** or **>{thresh_percent}%**.
+"""
+
+    content += f"""
+## 3. Top Service Trajectories
+
+| Service | MTD Cost | Prior Month | Delta % |
+|---|---|---|---|
+"""
+    for d in deltas[:6]:
+        ch = f"{d.get('changePercent', 0):+.1f}%" if d.get('changePercent') is not None else "N/A"
+        content += f"| {d.get('service')} | ${d.get('cost', '0.00')} | ${d.get('previousCost', '0.00')} | {ch} |\n"
+
+    rep = save_report({
+        "title": f"Scheduled Cost Pulse ({status.upper()}) - {today}",
+        "type": "scheduled-pulse",
+        "createdAt": now_iso,
+        "scope": scope,
+        "summary": summary_text,
+        "contentMarkdown": content,
+        "evidenceRunId": evidence_id
+    })
+
+    with sqlite3.connect(DB) as db:
+        db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_last_run', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (now_iso, now_iso))
+        db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_last_status', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (status, now_iso))
+        db.execute("INSERT INTO app_config (key, value, updated_at) VALUES ('schedule_last_summary', ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at", (summary_text, now_iso))
+
+    return {
+        "status": status,
+        "isAlert": is_alert,
+        "flaggedCount": len(flagged_services),
+        "flaggedServices": flagged_services,
+        "summary": summary_text,
+        "reportId": rep["id"],
+        "executedAt": now_iso,
+        "schedule": get_schedule_config()
+    }
+
 def overview(mode="live"):
     if mode!="demo":
         try: live=live_cost_overview() or {}; available=bool(live.get("previousMonth") or live.get("monthToDate")); live_error=None
@@ -891,7 +1068,8 @@ class Handler(BaseHTTPRequestHandler):
                 "activeProfile": get_active_scope()["profile"],
                 "activeRegion": get_active_scope()["region"],
                 "policies": get_policy_templates()
-            }
+            },
+            "/schedules": get_schedule_config
         }
         fn=routes.get(route); self.reply(200,fn()) if fn else self.reply(404,{"error":"not found"})
     def do_POST(self):
@@ -941,6 +1119,17 @@ class Handler(BaseHTTPRequestHandler):
         elif route=="/recommendations":
             try: self.reply(200,save(json.loads(body)))
             except (ValueError,json.JSONDecodeError) as exc: self.reply(400,{"error":str(exc)})
+            return
+        elif route=="/schedules":
+            try:
+                data=json.loads(body) if body else {}
+                if data.get("action") == "trigger":
+                    self.reply(200, run_anomaly_sweep())
+                else:
+                    updated = update_schedule_config(data)
+                    self.reply(200, {"schedule": updated})
+            except Exception as exc:
+                self.reply(400, {"error": str(exc)})
             return
         self.reply(404,{"error":"not found"})
 
