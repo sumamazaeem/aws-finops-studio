@@ -8,7 +8,7 @@
   "tags": ["aws", "finops", "cost-optimization", "read-only"],
   "useCases": ["Understand AWS spend and cost drivers", "Prioritize and track optimization recommendations", "Generate evidence-backed FinOps reports"],
   "configuration": ["Demo mode works without AWS credentials", "For live analysis, configure an AWS profile and least-privilege read-only access"],
-  "minKiroCrewVersion": "0.9.0",
+  "minKiroCrewVersion": "0.7.0",
   "agents": ["agents/finops-agent.json"],
   "skills": ["skills/finops-studio"],
   "mcpServers": {
