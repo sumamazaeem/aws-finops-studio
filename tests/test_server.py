@@ -72,12 +72,18 @@ def test_reports_persist_and_generate(monkeypatch,tmp_path):
     assert "Executive" in reports[0]["title"]
     assert reports[0]["id"]=="rep_20261004_executive"
 
-    # Generate backlog report
+    # Generate backlog report (live zero findings)
     backlog=server.generate_report("backlog")
     assert backlog["type"]=="backlog"
+    assert "Optimization Audit Findings & Diagnostics" in backlog["contentMarkdown"]
     all_reps=server.list_reports()
     assert len(all_reps)>=2
     assert all_reps[0]["id"]==backlog["id"]
+
+    # Generate backlog report (demo mode)
+    demo_backlog=server.generate_report("backlog", mode="demo")
+    assert demo_backlog["type"]=="backlog"
+    assert "demo-ec2-1" in demo_backlog["contentMarkdown"] or "Review oversized EC2" in demo_backlog["contentMarkdown"]
 
 def test_profile_discovery_and_active_scope(monkeypatch,tmp_path):
     server=load_server(monkeypatch,tmp_path)
