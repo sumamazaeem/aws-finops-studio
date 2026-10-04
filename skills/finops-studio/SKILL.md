@@ -6,7 +6,14 @@ always: true
 
 # AWS FinOps Studio workflow
 
-Use AWS-maintained `aws-billing-and-cost-management` for Cost Explorer, Cost Optimization Hub, Compute Optimizer, commitments, budgets, forecasts, pricing, CUR, and service-specific domain rules. Use `aws-storage`, `aws-observability`, `aws-iam`, and `aws-well-architected-review` only when relevant. This skill defines product workflow, not AWS domain facts.
+This workflow coordinates with the bundled official AWS Agent Toolkit skills packaged with this app:
+- `aws-billing-and-cost-management`: Master domain rules for Cost Explorer, Cost Optimization Hub, Compute Optimizer, commitments (Savings Plans & RIs), budgets, forecasts, pricing, CUR, and anomaly detection.
+- `aws-storage`: S3 storage class tiering, lifecycle policies, and EBS volume type optimization.
+- `aws-observability`: CloudWatch utilization metrics and idle infrastructure thresholds.
+- `aws-iam`: Read-only policy validation and least-privilege access rules.
+- `aws-well-architected-review`: Cost Optimization pillar alignment and assessment criteria.
+
+This `finops-studio` skill governs the end-to-end investigation procedure, evidence-based recommendations, and deterministic financial calculations.
 
 ## Safety and calculation rules
 

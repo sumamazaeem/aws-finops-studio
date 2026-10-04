@@ -10,7 +10,14 @@
   "configuration": ["Demo mode works without AWS credentials", "For live analysis, configure an AWS profile and least-privilege read-only access"],
   "minKiroCrewVersion": "0.7.0",
   "agents": ["agents/finops-agent.json"],
-  "skills": ["skills/finops-studio"],
+  "skills": [
+    "skills/finops-studio",
+    "skills/aws-billing-and-cost-management",
+    "skills/aws-storage",
+    "skills/aws-observability",
+    "skills/aws-iam",
+    "skills/aws-well-architected-review"
+  ],
   "mcpServers": {
     "aws-finops-readonly": {
       "command": "uvx",

@@ -27,8 +27,14 @@ Financial flow is always `AWS data → deterministic calculation → structured 
 - `app.json`: Kiro Crew 0.9 App Kit manifest, scoped permissions, Billing & Cost Management MCP declaration.
 - `ui/`: React/Vite ESM app with 4 Persona lenses (Practitioner, Finance, Engineering, Leadership), scope indicator, MoM deltas, and immutable evidence audit log.
 - `backend/`: loopback-only, gateway-HMAC-authenticated API, STS caller identity verification, deterministic calculations (`/calculate`), and app-scoped SQLite persistence (`evidence_runs` & `recommendations`).
-- `agents/finops-agent.json`: dedicated, read-only FinOps agent.
-- `skills/finops-studio/`: product workflow; AWS domain guidance remains upstream-owned.
+- `agents/finops-agent.json`: dedicated, read-only FinOps agent blueprint (`finops-agent`) with mapped skill resources.
+- `skills/`: Bundled official AWS Agent Toolkit domain skills + product workflow skill:
+  - `aws-billing-and-cost-management`: Master rules for Cost Explorer, Cost Optimization Hub, Compute Optimizer, commitments, budgets, and CUR.
+  - `aws-storage`: S3 storage class tiering, lifecycle policies, and EBS volume optimization.
+  - `aws-observability`: CloudWatch utilization metrics and idle infrastructure thresholds.
+  - `aws-iam`: Read-only policy validation and least-privilege access rules.
+  - `aws-well-architected-review`: Cost Optimization pillar alignment and assessment criteria.
+  - `finops-studio`: Product workflow, evidence collection, and deterministic recommendation lifecycles.
 - `tests/`: deterministic analytics, variance, credit ratios, service deltas, allocation coverage, durable persistence, and error contracts.
 
 ## Execution and data planes
