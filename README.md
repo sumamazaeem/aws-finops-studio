@@ -297,6 +297,24 @@ Tests cover currency formatting, variance arithmetic, credit adjustment ratios, 
 
 ---
 
+## Contributing & Pull Requests
+
+We welcome contributions from the community! To maintain architectural rigor, security, and stability:
+
+1. **Maintainer-Only Merges**: Pull requests are **never merged automatically**. Only the repository owner ([@sumamazaeem](https://github.com/sumamazaeem)) can review, approve, and merge pull requests into `main`.
+2. **Zero Runtime Dependencies**: The backend must strictly use the Python 3 Standard Library. Do not introduce third-party `pip` packages.
+3. **Pre-Bundled ESM UI**: When modifying `ui/src/`, always run `cd ui && npm run build` to update `dist/index.mjs`.
+4. **Read-Only Guarantee**: FinOps Studio must remain 100% read-only. Mutative AWS API calls (`Create*`, `Delete*`, `Modify*`, `Purchase*`) are strictly prohibited.
+5. **Testing**: All PRs must pass the test suite:
+   ```bash
+   PYTHONPATH=. pytest
+   cd ui && npm run build
+   ```
+
+For detailed step-by-step guidance, please review the complete [Contributing Guidelines](CONTRIBUTING.md).
+
+---
+
 ## References
 
 Architecture and compatibility decisions are aligned with documentation from [Kiro Crew](https://github.com/kirodotdev/KiroCrew), [AWS Agent Toolkit for AWS](https://github.com/aws/agent-toolkit-for-aws), [AWS Labs MCP](https://github.com/awslabs/mcp), and the [FinOps Foundation Framework](https://www.finops.org/framework/).
