@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "FinOpsReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity", "ce:Get*", "ce:List*", "cost-optimization-hub:Get*", "cost-optimization-hub:List*",
+        "compute-optimizer:Get*", "compute-optimizer:Describe*", "budgets:ViewBudget", "savingsplans:Describe*",
+        "cloudwatch:GetMetricData", "cloudwatch:GetMetricStatistics", "cloudwatch:ListMetrics",
+        "ec2:Describe*", "rds:Describe*", "lambda:GetFunction", "lambda:GetFunctionConfiguration", "lambda:ListFunctions",
+        "ecs:Describe*", "ecs:List*", "eks:Describe*", "eks:List*", "s3:GetAccountPublicAccessBlock",
+        "s3:GetBucketLocation", "s3:GetBucketTagging", "s3:ListAllMyBuckets", "organizations:Describe*", "organizations:List*",
+        "billing:GetBillingViewData", "billing:ListBillingViews", "cur:DescribeReportDefinitions", "bcm-data-exports:GetExport", "bcm-data-exports:ListExports"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

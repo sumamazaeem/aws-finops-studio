@@ -1,0 +1,43 @@
+{
+  "name": "aws-finops-studio",
+  "version": "0.1.0",
+  "displayName": "AWS FinOps Studio",
+  "description": "Read-only AWS cost intelligence, optimization tracking, and evidence-backed FinOps reporting.",
+  "author": "AWS FinOps Studio",
+  "iconPath": "assets/icon.png",
+  "tags": ["aws", "finops", "cost-optimization", "read-only"],
+  "useCases": ["Understand AWS spend and cost drivers", "Prioritize and track optimization recommendations", "Generate evidence-backed FinOps reports"],
+  "configuration": ["Demo mode works without AWS credentials", "For live analysis, configure an AWS profile and least-privilege read-only access"],
+  "minKiroCrewVersion": "0.9.0",
+  "agents": ["agents/finops-agent.json"],
+  "skills": ["skills/finops-studio"],
+  "mcpServers": {
+    "aws-finops-readonly": {
+      "command": "uvx",
+      "args": ["awslabs.billing-cost-management-mcp-server@latest"],
+      "env": {
+        "AWS_PROFILE": "default",
+        "AWS_REGION": "us-east-1",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    }
+  },
+  "backend": {"entryPoint": "backend/server.py", "type": "python", "port": "auto", "healthCheck": "/health", "routes": "/api/apps/aws-finops-studio"},
+  "ui": {"entry": "dist/index.mjs", "pages": [{"route": "/apps/aws-finops-studio", "label": "FinOps Studio", "icon": "Package"}]},
+  "permissions": {
+    "api": [
+      "/apps/aws-finops-studio/api/status",
+      "/apps/aws-finops-studio/api/overview",
+      "/apps/aws-finops-studio/api/recommendations",
+      "/apps/aws-finops-studio/api/reports",
+      "/apps/aws-finops-studio/api/diagnostics",
+      "/apps/aws-finops-studio/api/refresh-live",
+      "/apps/aws-finops-studio/api/evidence",
+      "/apps/aws-finops-studio/api/calculate",
+      "/apps/aws-finops-studio/api/profiles",
+      "/apps/aws-finops-studio/api/policies"
+    ],
+    "events": [], "storage": true, "cron": false, "memory": "app-scoped", "network": false,
+    "sessionApproval": false, "spawn": false, "jobs": false
+  }
+}

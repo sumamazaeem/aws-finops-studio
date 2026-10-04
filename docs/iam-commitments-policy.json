@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "FinOpsStudioCommitmentsReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "savingsplans:Describe*",
+        "ce:GetSavingsPlansCoverage",
+        "ce:GetSavingsPlansUtilization",
+        "ce:GetSavingsPlansPurchaseRecommendation",
+        "ce:GetReservationCoverage",
+        "ce:GetReservationUtilization",
+        "ce:GetReservationPurchaseRecommendation"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "FinOpsStudioOptimizationReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "cost-optimization-hub:Get*",
+        "cost-optimization-hub:List*",
+        "compute-optimizer:Get*",
+        "compute-optimizer:Describe*",
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(48, 24) scale(9.5)">
+    <!-- Top Face -->
+    <path d="M22 1.15L3.5 12.05L22 22.34L40.5 12.05L22 1.15Z" fill="#00E5A3"/>
+    <!-- Left Face -->
+    <path d="M18.8 47.66L0.5 37.36V16.71L18.8 27.01V47.66Z" fill="#00C693"/>
+    <!-- Right Face -->
+    <path d="M25.2 47.66L43.5 37.36V16.71L25.2 27.01V47.66Z" fill="#00966F"/>
+  </g>
+</svg>

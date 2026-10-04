@@ -1,0 +1,18 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "FinOpsStudioSummaryReadOnly",
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity",
+        "ce:GetCostAndUsage",
+        "ce:GetDimensionValues",
+        "ce:GetCostForecast",
+        "billing:ListBillingViews",
+        "billing:GetBillingViewData"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
