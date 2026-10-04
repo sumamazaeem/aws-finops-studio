@@ -1,160 +1,172 @@
 import { jsxs as t, jsx as e } from "react/jsx-runtime";
-import { useState as x, useEffect as le, useMemo as ge } from "react";
+import { useState as x, useEffect as ce, useMemo as ge } from "react";
 import { useAppApi as Ne, useChatLauncher as ye } from "@kirocrew/app-sdk";
-import { Skeleton as ne, PageHeader as we, ErrorNotice as Se, Card as b, Btn as A, Badge as N, CardTitle as y, StatCard as Y, EmptyState as Ce } from "@kirocrew/app-sdk/ui";
+import { Skeleton as de, PageHeader as we, ErrorNotice as Se, Card as b, Btn as A, Badge as N, CardTitle as y, StatCard as _, EmptyState as Ce } from "@kirocrew/app-sdk/ui";
 const Ae = [
   { id: "Practitioner", label: "Practitioner", icon: "🛡️", desc: "Full query lineage, raw hashes, and FinOps evidence audit" },
   { id: "Finance", label: "Finance", icon: "💼", desc: "Pre-credit unblended costs, adjustments, credits, refunds, and net ledger" },
   { id: "Engineering", label: "Engineering", icon: "⚙️", desc: "Cost drivers, period-over-period deltas, and actionable rightsizing" },
   { id: "Leadership", label: "Leadership", icon: "📊", desc: "Executive cost trajectory, realized savings, and active optimization pipeline" }
-], ke = [["Overview", "◫"], ["Cost Explorer", "▥"], ["Optimization", "↘"], ["Anomalies", "△"], ["Resources", "▤"], ["Commitments", "◇"], ["Well-Architected", "✓"], ["Ask FinOps", "✦"], ["Reports", "▧"], ["History", "◷"], ["Connection", "⚙"]], $ = (r) => new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(r)), U = (r) => {
-  const s = Number(r);
-  return new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(s) < 5e-3 ? 0 : s);
-}, ae = (r) => r === "high" ? "success" : r === "medium" ? "warning" : "default";
-function te({ className: r = "w-6 h-6" }) {
-  return /* @__PURE__ */ t("svg", { className: r, viewBox: "0 0 44 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [
+], ke = [["Overview", "◫"], ["Cost Explorer", "▥"], ["Optimization", "↘"], ["Anomalies", "△"], ["Resources", "▤"], ["Commitments", "◇"], ["Well-Architected", "✓"], ["Ask FinOps", "✦"], ["Reports", "▧"], ["History", "◷"], ["Connection", "⚙"]], L = (s) => new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(s)), B = (s) => {
+  const r = Number(s);
+  return new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(r) < 5e-3 ? 0 : r);
+}, ue = (s) => s === "high" ? "success" : s === "medium" ? "warning" : "default";
+function ie({ className: s = "w-6 h-6" }) {
+  return /* @__PURE__ */ t("svg", { className: s, viewBox: "0 0 44 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [
     /* @__PURE__ */ e("path", { d: "M22 1.15L3.5 12.05L22 22.34L40.5 12.05L22 1.15Z", fill: "#00E5A3" }),
     /* @__PURE__ */ e("path", { d: "M18.8 47.66L0.5 37.36V16.71L18.8 27.01V47.66Z", fill: "#00C693" }),
     /* @__PURE__ */ e("path", { d: "M25.2 47.66L43.5 37.36V16.71L25.2 27.01V47.66Z", fill: "#00966F" })
   ] });
 }
 function Ve() {
-  const r = Ne(), { openChat: s } = ye(), [n, i] = x("Overview"), [l, u] = x(() => {
+  const s = Ne(), { openChat: r } = ye(), [n, i] = x("Overview"), [l, u] = x(() => {
     try {
       return localStorage.getItem("aws-finops-studio:demo") === "true";
     } catch {
       return !1;
     }
-  }), [o, v] = x("Practitioner"), [a, h] = x(null), [f, S] = x([]), [P, j] = x([]), [k, L] = x(null), [I, C] = x(""), [O, M] = x(!1), [V, F] = x([]), [B, g] = x(null), [H, w] = x(null), [m, D] = x(null), [G, W] = x(null), [R, J] = x(null), [Z, _] = x(!1), [K, X] = x(null), Q = () => {
-    h(null), C("");
-    const c = "/apps/aws-finops-studio/api", p = l ? "demo" : "live";
+  }), [o, v] = x("Practitioner"), [c, p] = x(null), [f, S] = x([]), [O, M] = x([]), [P, H] = x(null), [q, C] = x(""), [W, F] = x(!1), [G, $] = x([]), [Q, g] = x(null), [U, w] = x(null), [m, se] = x(null), [Y, j] = x(null), [R, Z] = x(null), [X, D] = x(!1), [ee, te] = x(null), K = () => {
+    p(null), C("");
+    const a = "/apps/aws-finops-studio/api", h = l ? "demo" : "live";
     Promise.all([
-      r.get(`${c}/overview?mode=${p}`),
-      r.get(`${c}/recommendations?mode=${p}`),
-      r.get(`${c}/evidence`),
-      r.get(`${c}/reports`),
-      r.get(`${c}/diagnostics`),
-      r.get(`${c}/profiles`),
-      r.get(`${c}/policies`),
-      r.get(`${c}/schedules`)
-    ]).then(([E, pe, re, se, xe, fe, be, ve]) => {
-      h(E), S(pe.items), j((re == null ? void 0 : re.runs) || []), F((se == null ? void 0 : se.items) || []), L(xe), D(fe), W(be), J(ve);
-    }).catch((E) => C(E.message || "Unable to load FinOps data"));
-  }, ee = async (c) => {
+      s.get(`${a}/overview?mode=${h}`),
+      s.get(`${a}/recommendations?mode=${h}`),
+      s.get(`${a}/evidence`),
+      s.get(`${a}/reports`),
+      s.get(`${a}/diagnostics`),
+      s.get(`${a}/profiles`),
+      s.get(`${a}/policies`),
+      s.get(`${a}/schedules`)
+    ]).then(([k, ne, J, E, me, le, I, ve]) => {
+      p(k), S(ne.items), M((J == null ? void 0 : J.runs) || []), $((E == null ? void 0 : E.items) || []), H(me), se(le), j(I), Z(ve);
+    }).catch((k) => C(k.message || "Unable to load FinOps data"));
+  }, re = async (a) => {
     try {
-      const p = await r.post("/apps/aws-finops-studio/api/schedules", c);
-      p != null && p.schedule && J(p.schedule);
-    } catch (p) {
-      C(p.message || "Failed to update schedule");
+      const h = await s.post("/apps/aws-finops-studio/api/schedules", a);
+      h != null && h.schedule && Z(h.schedule);
+      const k = (h == null ? void 0 : h.schedule) || { ...R, ...a }, ne = (m == null ? void 0 : m.activeProfile) || "default", J = k.frequency || "daily", E = await s.get("/api/crons"), le = (E != null && E.jobs ? E.jobs : Array.isArray(E) ? E : []).filter((I) => I.name === "aws-finops-daily" || I.name === "aws-finops-weekly");
+      for (const I of le)
+        I.id && await s.delete(`/api/crons/${I.id}`);
+      if (k.enabled) {
+        const I = J === "daily" ? `Run daily AWS cost and anomaly pulse for profile ${ne}. Check for service cost spikes >$${k.thresholdDollars} or >${k.thresholdPercent}%. Keep report concise and evidence-backed.` : `Run weekly executive FinOps digest and optimization backlog audit for profile ${ne}. Summarize MTD spend, top service deltas, and rightsizing opportunities.`;
+        await s.post("/api/crons", {
+          name: J === "daily" ? "aws-finops-daily" : "aws-finops-weekly",
+          message: I,
+          cron: J === "daily" ? "0 8 * * *" : "0 9 * * 1",
+          agent: "finops-agent"
+        });
+      }
+    } catch (h) {
+      C(h.message || "Failed to update schedule");
     }
   }, d = async () => {
-    _(!0), X(null), C("");
+    D(!0), te(null), C("");
     try {
-      const c = await r.post("/apps/aws-finops-studio/api/schedules", { action: "trigger" });
-      X(c), c != null && c.schedule && J(c.schedule);
-      const p = await r.get("/apps/aws-finops-studio/api/reports");
-      p != null && p.items && F(p.items);
-    } catch (c) {
-      C(c.message || "Failed to run anomaly sweep");
+      const a = await s.post("/apps/aws-finops-studio/api/schedules", { action: "trigger" });
+      te(a), a != null && a.schedule && Z(a.schedule);
+      const h = await s.get("/apps/aws-finops-studio/api/reports");
+      h != null && h.items && $(h.items);
+    } catch (a) {
+      C(a.message || "Failed to run anomaly sweep");
     } finally {
-      _(!1);
+      D(!1);
     }
   };
-  le(() => {
+  ce(() => {
     try {
       localStorage.setItem("aws-finops-studio:demo", String(l));
     } catch {
     }
-    Q();
+    K();
   }, [l]);
-  const T = (c) => s({ agent: "finops-agent", message: c, autoSend: !0 }), q = async () => {
-    M(!0), C("");
+  const T = (a) => r({ agent: "finops-agent", message: a, autoSend: !0 }), V = async () => {
+    F(!0), C("");
     try {
-      const c = await r.post("/apps/aws-finops-studio/api/refresh-live", {});
-      h(c);
-      const p = await r.get("/apps/aws-finops-studio/api/evidence");
-      j((p == null ? void 0 : p.runs) || []);
-      const E = await r.get("/apps/aws-finops-studio/api/diagnostics");
-      L(E);
-    } catch (c) {
-      C(c.message || "Unable to load live AWS data");
+      const a = await s.post("/apps/aws-finops-studio/api/refresh-live", {});
+      p(a);
+      const h = await s.get("/apps/aws-finops-studio/api/evidence");
+      M((h == null ? void 0 : h.runs) || []);
+      const k = await s.get("/apps/aws-finops-studio/api/diagnostics");
+      H(k);
+    } catch (a) {
+      C(a.message || "Unable to load live AWS data");
     } finally {
-      M(!1);
+      F(!1);
     }
-  }, de = async (c, p) => {
-    C(""), M(!0);
+  }, oe = async (a, h) => {
+    C(""), F(!0);
     try {
-      const E = await r.post("/apps/aws-finops-studio/api/profiles", { profile: c, region: p });
-      D(E), Q();
-    } catch (E) {
-      C(E.message || "Failed to switch AWS profile");
+      const k = await s.post("/apps/aws-finops-studio/api/profiles", { profile: a, region: h });
+      se(k), K();
+    } catch (k) {
+      C(k.message || "Failed to switch AWS profile");
     } finally {
-      M(!1);
+      F(!1);
     }
-  }, ue = async (c) => {
-    w(c), C("");
+  }, fe = async (a) => {
+    w(a), C("");
     try {
-      const p = await r.post("/apps/aws-finops-studio/api/reports", { type: c, mode: l ? "demo" : "live" });
-      p != null && p.items && F(p.items), p != null && p.report && g(p.report);
-    } catch (p) {
-      C(p.message || "Failed to generate report");
+      const h = await s.post("/apps/aws-finops-studio/api/reports", { type: a, mode: l ? "demo" : "live" });
+      h != null && h.items && $(h.items), h != null && h.report && g(h.report);
+    } catch (h) {
+      C(h.message || "Failed to generate report");
     } finally {
       w(null);
     }
-  }, he = ge(() => a ? n === "Overview" ? a.mode === "live" ? /* @__PURE__ */ e(Pe, { data: a, persona: o, onAsk: T, onRefresh: q, refreshing: O }) : /* @__PURE__ */ e(Re, { data: a, persona: o, onAsk: () => T("Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.") }) : n === "Optimization" || n === "Resources" ? /* @__PURE__ */ e(
+  }, be = ge(() => c ? n === "Overview" ? c.mode === "live" ? /* @__PURE__ */ e(Pe, { data: c, persona: o, onAsk: T, onRefresh: V, refreshing: W }) : /* @__PURE__ */ e(Oe, { data: c, persona: o, onAsk: () => T("Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.") }) : n === "Optimization" || n === "Resources" ? /* @__PURE__ */ e(
     We,
     {
       items: f,
       title: n,
       demo: l,
       onSwitchToDemo: () => u(!0),
-      onRefresh: q,
-      refreshing: O
+      onRefresh: V,
+      refreshing: W
     }
-  ) : n === "History" ? /* @__PURE__ */ e(je, { runs: P, recommendations: f, onRefresh: Q }) : n === "Connection" ? /* @__PURE__ */ e(
+  ) : n === "History" ? /* @__PURE__ */ e(je, { runs: O, recommendations: f, onRefresh: K }) : n === "Connection" ? /* @__PURE__ */ e(
     Me,
     {
-      data: k,
+      data: P,
       profilesData: m,
-      policiesData: G,
-      onSwitchProfile: de,
-      onRefreshLive: q,
-      refreshing: O
+      policiesData: Y,
+      onSwitchProfile: oe,
+      onRefreshLive: V,
+      refreshing: W
     }
   ) : n === "Ask FinOps" ? /* @__PURE__ */ e(Fe, { onAsk: T }) : n === "Anomalies" ? /* @__PURE__ */ e(
-    ze,
+    Te,
     {
       scheduleConfig: R,
-      onUpdateSchedule: ee,
+      onUpdateSchedule: re,
       onTriggerSweep: d,
-      runningSweep: Z,
-      sweepResult: K,
+      runningSweep: X,
+      sweepResult: ee,
       demo: l,
-      anomalies: a.anomalies,
+      anomalies: c.anomalies,
       onAsk: T
     }
-  ) : n === "Cost Explorer" ? a.mode === "demo" ? /* @__PURE__ */ e($e, { items: a.drivers }) : a.dataAvailable ? /* @__PURE__ */ e(Oe, { drivers: a.drivers, previous: a.previousDrivers || [], onRefresh: q, refreshing: O }) : /* @__PURE__ */ e(me, { onRefresh: q, refreshing: O }) : n === "Commitments" ? /* @__PURE__ */ e(ie, { title: "Commitment intelligence", text: "Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed.", action: () => T("Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.") }) : n === "Well-Architected" ? /* @__PURE__ */ e(ie, { title: "Cost Optimization review", text: "Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance.", action: () => T("Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.") }) : n === "Reports" ? /* @__PURE__ */ e(
+  ) : n === "Cost Explorer" ? c.mode === "demo" ? /* @__PURE__ */ e(ze, { items: c.drivers }) : c.dataAvailable ? /* @__PURE__ */ e(Re, { drivers: c.drivers, previous: c.previousDrivers || [], onRefresh: V, refreshing: W }) : /* @__PURE__ */ e(xe, { onRefresh: V, refreshing: W }) : n === "Commitments" ? /* @__PURE__ */ e(ae, { title: "Commitment intelligence", text: "Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed.", action: () => T("Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.") }) : n === "Well-Architected" ? /* @__PURE__ */ e(ae, { title: "Cost Optimization review", text: "Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance.", action: () => T("Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.") }) : n === "Reports" ? /* @__PURE__ */ e(
     Le,
     {
-      reports: V,
-      selectedReport: B,
+      reports: G,
+      selectedReport: Q,
       onSelectReport: g,
-      onGenerate: ue,
-      generating: H,
+      onGenerate: fe,
+      generating: U,
       onAskAgent: () => T("Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly."),
       onOpenSchedules: () => i("Anomalies")
     }
-  ) : /* @__PURE__ */ e(ie, { title: "FinOps reports", text: "Generate weekly, monthly, executive, or optimization-backlog reports from live evidence.", action: () => T("Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.") }) : /* @__PURE__ */ t("div", { className: "p-6 grid gap-4 grid-cols-3", children: [
-    /* @__PURE__ */ e(ne, {}),
-    /* @__PURE__ */ e(ne, {}),
-    /* @__PURE__ */ e(ne, {})
-  ] }), [n, a, f, P, V, B, H, k, m, G, l, o, O, R, Z, K]), z = (a == null ? void 0 : a.callerIdentity) || (k == null ? void 0 : k.callerIdentity);
+  ) : /* @__PURE__ */ e(ae, { title: "FinOps reports", text: "Generate weekly, monthly, executive, or optimization-backlog reports from live evidence.", action: () => T("Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.") }) : /* @__PURE__ */ t("div", { className: "p-6 grid gap-4 grid-cols-3", children: [
+    /* @__PURE__ */ e(de, {}),
+    /* @__PURE__ */ e(de, {}),
+    /* @__PURE__ */ e(de, {})
+  ] }), [n, c, f, O, G, Q, U, P, m, Y, l, o, W, R, X, ee]), z = (c == null ? void 0 : c.callerIdentity) || (P == null ? void 0 : P.callerIdentity);
   return /* @__PURE__ */ t("div", { className: "h-full min-h-0 flex bg-surface text-foreground", children: [
     /* @__PURE__ */ t("aside", { className: "w-64 shrink-0 border-r border-border bg-surface-muted/40 p-3 overflow-y-auto flex flex-col justify-between", children: [
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ t("div", { className: "p-3 mb-2", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center gap-2.5 font-semibold", children: [
-            /* @__PURE__ */ e("div", { className: "p-1.5 rounded-xl bg-surface border border-border shadow-sm flex items-center justify-center shrink-0", children: /* @__PURE__ */ e(te, { className: "w-5 h-5" }) }),
+            /* @__PURE__ */ e("div", { className: "p-1.5 rounded-xl bg-surface border border-border shadow-sm flex items-center justify-center shrink-0", children: /* @__PURE__ */ e(ie, { className: "w-5 h-5" }) }),
             /* @__PURE__ */ t("div", { children: [
               /* @__PURE__ */ e("div", { className: "leading-tight", children: "AWS FinOps Studio" }),
               /* @__PURE__ */ e("div", { className: "text-[10px] text-muted uppercase tracking-wider font-mono", children: "v0.1.0 · Read-Only" })
@@ -171,12 +183,12 @@ function Ve() {
             "select",
             {
               value: m.activeProfile,
-              onChange: (c) => de(c.target.value, m.activeRegion),
+              onChange: (a) => oe(a.target.value, m.activeRegion),
               className: "w-full bg-surface border border-border rounded px-2 py-1 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent",
-              children: m.profiles.map((c) => /* @__PURE__ */ t("option", { value: c, children: [
+              children: m.profiles.map((a) => /* @__PURE__ */ t("option", { value: a, children: [
                 "Profile: ",
-                c
-              ] }, c))
+                a
+              ] }, a))
             }
           ) }) : /* @__PURE__ */ e("div", { className: "font-medium mt-1 truncate", children: l ? "Synthetic Sandbox" : z != null && z.accountMasked ? `Account ${z.accountMasked}` : `Profile: ${(m == null ? void 0 : m.activeProfile) || "default"}` }),
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between text-[11px] text-muted mt-1 truncate", children: [
@@ -191,10 +203,10 @@ function Ve() {
             )
           ] })
         ] }),
-        /* @__PURE__ */ e("nav", { className: "space-y-1", children: ke.map(([c, p]) => /* @__PURE__ */ t("button", { onClick: () => i(c), className: `w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${n === c ? "bg-accent/15 text-accent font-medium" : "text-muted hover:bg-surface-muted"}`, children: [
-          /* @__PURE__ */ e("span", { className: "w-4 text-center", "aria-hidden": !0, children: p }),
-          c
-        ] }, c)) })
+        /* @__PURE__ */ e("nav", { className: "space-y-1", children: ke.map(([a, h]) => /* @__PURE__ */ t("button", { onClick: () => i(a), className: `w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${n === a ? "bg-accent/15 text-accent font-medium" : "text-muted hover:bg-surface-muted"}`, children: [
+          /* @__PURE__ */ e("span", { className: "w-4 text-center", "aria-hidden": !0, children: h }),
+          a
+        ] }, a)) })
       ] }),
       /* @__PURE__ */ e("div", { className: "mt-4 pt-3 border-t border-border", children: /* @__PURE__ */ t(
         "div",
@@ -221,8 +233,8 @@ function Ve() {
                   role: "switch",
                   "aria-checked": !l,
                   "aria-label": "Toggle Live AWS",
-                  onClick: (c) => {
-                    c.stopPropagation(), u(!l);
+                  onClick: (a) => {
+                    a.stopPropagation(), u(!l);
                   },
                   className: `relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${l ? "bg-slate-300 dark:bg-slate-600" : "bg-emerald-500"}`,
                   children: /* @__PURE__ */ e(
@@ -242,37 +254,37 @@ function Ve() {
     /* @__PURE__ */ t("main", { className: "flex-1 min-w-0 overflow-y-auto", children: [
       /* @__PURE__ */ t("div", { className: "px-6 pt-5 pb-3 border-b border-border flex flex-wrap items-center justify-between gap-4", children: [
         /* @__PURE__ */ e(we, { title: n, subtitle: "Deterministic, read-only AWS financial operations workspace" }),
-        /* @__PURE__ */ e("div", { className: "flex items-center gap-1.5 p-1 bg-surface-muted rounded-xl border border-border", children: Ae.map((c) => /* @__PURE__ */ t(
+        /* @__PURE__ */ e("div", { className: "flex items-center gap-1.5 p-1 bg-surface-muted rounded-xl border border-border", children: Ae.map((a) => /* @__PURE__ */ t(
           "button",
           {
-            onClick: () => v(c.id),
-            title: c.desc,
-            className: `px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${o === c.id ? "bg-surface text-foreground shadow-sm font-semibold" : "text-muted hover:text-foreground"}`,
+            onClick: () => v(a.id),
+            title: a.desc,
+            className: `px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${o === a.id ? "bg-surface text-foreground shadow-sm font-semibold" : "text-muted hover:text-foreground"}`,
             children: [
-              /* @__PURE__ */ e("span", { children: c.icon }),
-              /* @__PURE__ */ e("span", { children: c.label })
+              /* @__PURE__ */ e("span", { children: a.icon }),
+              /* @__PURE__ */ e("span", { children: a.label })
             ]
           },
-          c.id
+          a.id
         )) })
       ] }),
-      I && /* @__PURE__ */ e("div", { className: "px-6 mt-4", children: /* @__PURE__ */ e(Se, { message: I }) }),
-      he
+      q && /* @__PURE__ */ e("div", { className: "px-6 mt-4", children: /* @__PURE__ */ e(Se, { message: q }) }),
+      be
     ] })
   ] });
 }
-function ce({ title: r, data: s, persona: n }) {
-  const i = Math.abs(Number(s.credits)), l = Number(s.costBeforeCredits), u = l > 0 ? (i / l * 100).toFixed(1) : "0.0";
+function he({ title: s, data: r, persona: n }) {
+  const i = Math.abs(Number(r.credits)), l = Number(r.costBeforeCredits), u = l > 0 ? (i / l * 100).toFixed(1) : "0.0";
   return /* @__PURE__ */ t(b, { children: [
     /* @__PURE__ */ t("div", { className: "flex items-start justify-between gap-3", children: [
       /* @__PURE__ */ t("div", { children: [
-        /* @__PURE__ */ e(y, { children: r }),
+        /* @__PURE__ */ e(y, { children: s }),
         /* @__PURE__ */ t("p", { className: "text-xs text-muted mt-1 font-mono", children: [
-          s.start,
+          r.start,
           " → ",
-          s.end,
+          r.end,
           " · End exclusive",
-          s.estimated ? " · estimated" : ""
+          r.estimated ? " · estimated" : ""
         ] })
       ] }),
       /* @__PURE__ */ t("div", { className: "flex items-center gap-2", children: [
@@ -287,74 +299,74 @@ function ce({ title: r, data: s, persona: n }) {
     /* @__PURE__ */ t("div", { className: "grid sm:grid-cols-4 gap-3 mt-4", children: [
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Unblended Gross (Pre-Adjustments)" }),
-        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1", children: U(s.costBeforeCredits) })
+        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1", children: B(r.costBeforeCredits) })
       ] }),
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Credits Applied" }),
-        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1 text-emerald-600", children: U(s.credits) })
+        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1 text-emerald-600", children: B(r.credits) })
       ] }),
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Refunds" }),
-        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1 text-emerald-600", children: U(s.refunds) })
+        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1 text-emerald-600", children: B(r.refunds) })
       ] }),
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Net Billed (After Adjustments)" }),
-        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1", children: U(s.netCost) })
+        /* @__PURE__ */ e("div", { className: "text-xl font-semibold mt-1", children: B(r.netCost) })
       ] })
     ] }),
     (n === "Practitioner" || n === "Finance") && /* @__PURE__ */ t("details", { className: "mt-4 text-xs text-muted", children: [
       /* @__PURE__ */ e("summary", { className: "cursor-pointer hover:text-foreground", children: "Record-type breakdown & raw ledger" }),
-      /* @__PURE__ */ e("pre", { className: "mt-2 p-2 bg-surface-muted/50 rounded font-mono whitespace-pre-wrap", children: JSON.stringify(s.recordTypes, null, 2) })
+      /* @__PURE__ */ e("pre", { className: "mt-2 p-2 bg-surface-muted/50 rounded font-mono whitespace-pre-wrap", children: JSON.stringify(r.recordTypes, null, 2) })
     ] })
   ] });
 }
-function me({ onRefresh: r, refreshing: s }) {
+function xe({ onRefresh: s, refreshing: r }) {
   return /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "max-w-2xl py-8 mx-auto text-center", children: [
-    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(te, { className: "w-10 h-10" }) }),
+    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(ie, { className: "w-10 h-10" }) }),
     /* @__PURE__ */ e("h2", { className: "text-lg font-semibold mt-3", children: "Load live AWS evidence" }),
     /* @__PURE__ */ t("p", { className: "text-sm text-muted mt-2", children: [
       "Executes two fixed read-only AWS Cost Explorer queries using profile ",
       /* @__PURE__ */ e("code", { children: "default" }),
       ": one grouped by billing record type and one by service with adjustments excluded. Results are cryptographically hashed and persisted in local SQLite storage."
     ] }),
-    /* @__PURE__ */ e("div", { className: "mt-5", children: /* @__PURE__ */ e(A, { onClick: r, disabled: s, children: s ? "Loading live AWS data…" : "Approve & load live AWS data" }) })
+    /* @__PURE__ */ e("div", { className: "mt-5", children: /* @__PURE__ */ e(A, { onClick: s, disabled: r, children: r ? "Loading live AWS data…" : "Approve & load live AWS data" }) })
   ] }) });
 }
-function Pe({ data: r, persona: s, onAsk: n, onRefresh: i, refreshing: l }) {
-  var v, a, h, f;
-  const u = (v = r.live) == null ? void 0 : v.previousMonth, o = (a = r.live) == null ? void 0 : a.monthToDate;
+function Pe({ data: s, persona: r, onAsk: n, onRefresh: i, refreshing: l }) {
+  var v, c, p, f;
+  const u = (v = s.live) == null ? void 0 : v.previousMonth, o = (c = s.live) == null ? void 0 : c.monthToDate;
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
     /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-surface-muted/60 border border-border", children: [
       /* @__PURE__ */ t("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ e(N, { tone: "success", children: "Live AWS" }),
         /* @__PURE__ */ t("span", { className: "text-xs text-muted", children: [
           "Lens: ",
-          /* @__PURE__ */ e("strong", { className: "text-foreground", children: s }),
+          /* @__PURE__ */ e("strong", { className: "text-foreground", children: r }),
           " · ",
-          (h = r.live) != null && h.profile ? `Profile: ${r.live.profile}` : ""
+          (p = s.live) != null && p.profile ? `Profile: ${s.live.profile}` : ""
         ] })
       ] }),
-      r.payloadHash && /* @__PURE__ */ t("div", { className: "text-[11px] font-mono text-muted flex items-center gap-1.5", children: [
+      s.payloadHash && /* @__PURE__ */ t("div", { className: "text-[11px] font-mono text-muted flex items-center gap-1.5", children: [
         /* @__PURE__ */ e("span", { children: "SHA-256 Provenance:" }),
         /* @__PURE__ */ t("code", { className: "px-1.5 py-0.5 rounded bg-surface border border-border text-foreground font-semibold", children: [
-          r.payloadHash.slice(0, 16),
+          s.payloadHash.slice(0, 16),
           "…"
         ] })
       ] })
     ] }),
-    !r.dataAvailable && /* @__PURE__ */ e(me, { onRefresh: i, refreshing: l }),
-    u && /* @__PURE__ */ e(ce, { title: "Previous complete month", data: u, persona: s }),
-    o && /* @__PURE__ */ e(ce, { title: "Month to date", data: o, persona: s }),
-    r.dataAvailable && s === "Leadership" && /* @__PURE__ */ t(b, { children: [
+    !s.dataAvailable && /* @__PURE__ */ e(xe, { onRefresh: i, refreshing: l }),
+    u && /* @__PURE__ */ e(he, { title: "Previous complete month", data: u, persona: r }),
+    o && /* @__PURE__ */ e(he, { title: "Month to date", data: o, persona: r }),
+    s.dataAvailable && r === "Leadership" && /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ e(y, { children: "Executive Summary" }),
       /* @__PURE__ */ t("div", { className: "grid sm:grid-cols-3 gap-3 mt-3 text-sm", children: [
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Month to Date Net Spend" }),
-          /* @__PURE__ */ e("div", { className: "text-lg font-semibold mt-0.5", children: U((o == null ? void 0 : o.netCost) || "0.00") })
+          /* @__PURE__ */ e("div", { className: "text-lg font-semibold mt-0.5", children: B((o == null ? void 0 : o.netCost) || "0.00") })
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Active Optimization Pipeline" }),
-          /* @__PURE__ */ e("div", { className: "text-lg font-semibold mt-0.5 text-accent", children: r.optimizationOpportunity ? $(r.optimizationOpportunity) : "$0" })
+          /* @__PURE__ */ e("div", { className: "text-lg font-semibold mt-0.5 text-accent", children: s.optimizationOpportunity ? L(s.optimizationOpportunity) : "$0" })
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Verified Realized Savings" }),
@@ -362,8 +374,8 @@ function Pe({ data: r, persona: s, onAsk: n, onRefresh: i, refreshing: l }) {
         ] })
       ] })
     ] }),
-    r.dataAvailable && /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3", children: [
-      /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: ((f = r.live) == null ? void 0 : f.refreshedAt) && `Last refreshed: ${r.live.refreshedAt}` }),
+    s.dataAvailable && /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3", children: [
+      /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: ((f = s.live) == null ? void 0 : f.refreshedAt) && `Last refreshed: ${s.live.refreshedAt}` }),
       /* @__PURE__ */ t("div", { className: "flex flex-wrap gap-2", children: [
         /* @__PURE__ */ e(A, { onClick: i, disabled: l, children: l ? "Refreshing…" : "Refresh live AWS data" }),
         /* @__PURE__ */ e(A, { onClick: () => n("Use live AWS data only with profile default. Analyze month-to-date gross usage charges versus credits and refunds using RECORD_TYPE evidence. Report cost before credits, credits, refunds, discounts, taxes, and net cost separately; preserve raw API evidence and do not use demo data."), children: "Explain credits" })
@@ -371,7 +383,7 @@ function Pe({ data: r, persona: s, onAsk: n, onRefresh: i, refreshing: l }) {
     ] }) })
   ] });
 }
-function Oe({ drivers: r, previous: s, onRefresh: n, refreshing: i }) {
+function Re({ drivers: s, previous: r, onRefresh: n, refreshing: i }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { children: [
@@ -383,7 +395,7 @@ function Oe({ drivers: r, previous: s, onRefresh: n, refreshing: i }) {
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ e(y, { children: "Month-to-Date Services & MoM Change" }),
       /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1", children: "UnblendedCost · Excludes Credit & Refund record types" }),
-      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((l) => {
+      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: s.map((l) => {
         const u = Number(l.costDelta || 0);
         return /* @__PURE__ */ t("div", { className: "py-3 flex items-center justify-between gap-4", children: [
           /* @__PURE__ */ e("span", { className: "font-medium text-sm", children: l.service }),
@@ -393,56 +405,56 @@ function Oe({ drivers: r, previous: s, onRefresh: n, refreshing: i }) {
               l.changePercent,
               "% (",
               u > 0 ? "+" : "",
-              U(l.costDelta || 0),
+              B(l.costDelta || 0),
               ")"
             ] }),
-            /* @__PURE__ */ e("b", { className: "font-mono text-sm", children: U(l.cost) })
+            /* @__PURE__ */ e("b", { className: "font-mono text-sm", children: B(l.cost) })
           ] })
         ] }, l.service);
       }) }),
-      !r.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No service groups returned." })
+      !s.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No service groups returned." })
     ] }),
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ e(y, { children: "Previous Complete Month by Service" }),
-      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: s.map((l) => /* @__PURE__ */ t("div", { className: "py-3 flex justify-between gap-4 text-sm", children: [
+      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((l) => /* @__PURE__ */ t("div", { className: "py-3 flex justify-between gap-4 text-sm", children: [
         /* @__PURE__ */ e("span", { children: l.service }),
-        /* @__PURE__ */ e("b", { className: "font-mono", children: U(l.cost) })
+        /* @__PURE__ */ e("b", { className: "font-mono", children: B(l.cost) })
       ] }, l.service)) }),
-      !s.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No previous services returned." })
+      !r.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No previous services returned." })
     ] })
   ] });
 }
-function Re({ data: r, persona: s, onAsk: n }) {
+function Oe({ data: s, persona: r, onAsk: n }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-5", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { className: "flex items-center gap-2", children: [
         /* @__PURE__ */ t(N, { children: [
           "Demo mode · as of ",
-          r.asOf
+          s.asOf
         ] }),
         /* @__PURE__ */ t("span", { className: "text-xs text-muted", children: [
           "Lens: ",
-          /* @__PURE__ */ e("strong", { children: s })
+          /* @__PURE__ */ e("strong", { children: r })
         ] })
       ] }),
       /* @__PURE__ */ e(A, { onClick: n, children: "✦ Explain demo dataset" })
     ] }),
     /* @__PURE__ */ t("div", { className: "grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]", children: [
-      /* @__PURE__ */ e(Y, { label: "Month to date", value: $(r.mtdSpend), accent: !0 }),
-      /* @__PURE__ */ e(Y, { label: "Forecast", value: $(r.forecast) }),
-      /* @__PURE__ */ e(Y, { label: "Previous equivalent", value: $(r.previousEquivalent) }),
-      /* @__PURE__ */ e(Y, { label: "Cost change", value: `${r.costChangePercent > 0 ? "+" : ""}${r.costChangePercent}%` }),
-      /* @__PURE__ */ e(Y, { label: "Optimization opportunity", value: $(r.optimizationOpportunity) }),
-      /* @__PURE__ */ e(Y, { label: "FinOps score", value: "Insufficient data" })
+      /* @__PURE__ */ e(_, { label: "Month to date", value: L(s.mtdSpend), accent: !0 }),
+      /* @__PURE__ */ e(_, { label: "Forecast", value: L(s.forecast) }),
+      /* @__PURE__ */ e(_, { label: "Previous equivalent", value: L(s.previousEquivalent) }),
+      /* @__PURE__ */ e(_, { label: "Cost change", value: `${s.costChangePercent > 0 ? "+" : ""}${s.costChangePercent}%` }),
+      /* @__PURE__ */ e(_, { label: "Optimization opportunity", value: L(s.optimizationOpportunity) }),
+      /* @__PURE__ */ e(_, { label: "FinOps score", value: "Insufficient data" })
     ] }),
     /* @__PURE__ */ t("div", { className: "grid lg:grid-cols-2 gap-4", children: [
       /* @__PURE__ */ t(b, { children: [
         /* @__PURE__ */ e(y, { children: "Major cost drivers" }),
-        /* @__PURE__ */ e("div", { className: "mt-4 space-y-3", children: r.drivers.map((i) => /* @__PURE__ */ t("div", { children: [
+        /* @__PURE__ */ e("div", { className: "mt-4 space-y-3", children: s.drivers.map((i) => /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ t("div", { className: "flex justify-between text-sm", children: [
             /* @__PURE__ */ e("span", { children: i.service }),
             /* @__PURE__ */ t("span", { className: "font-medium", children: [
-              $(i.cost),
+              L(i.cost),
               " ",
               /* @__PURE__ */ t("span", { className: (i.changePercent || 0) > 0 ? "text-amber-600" : "text-emerald-600", children: [
                 (i.changePercent || 0) > 0 ? "+" : "",
@@ -456,13 +468,13 @@ function Re({ data: r, persona: s, onAsk: n }) {
       ] }),
       /* @__PURE__ */ t(b, { children: [
         /* @__PURE__ */ e(y, { children: "Recent anomalies" }),
-        /* @__PURE__ */ e("div", { className: "mt-3 divide-y divide-border", children: r.anomalies.map((i) => /* @__PURE__ */ t("div", { className: "py-3 flex gap-3", children: [
+        /* @__PURE__ */ e("div", { className: "mt-3 divide-y divide-border", children: s.anomalies.map((i) => /* @__PURE__ */ t("div", { className: "py-3 flex gap-3", children: [
           /* @__PURE__ */ e("span", { className: "text-amber-500", "aria-hidden": !0, children: "△" }),
           /* @__PURE__ */ t("div", { className: "flex-1", children: [
             /* @__PURE__ */ t("div", { className: "text-sm font-medium", children: [
               i.service,
               " · ",
-              $(i.impact)
+              L(i.impact)
             ] }),
             /* @__PURE__ */ t("div", { className: "text-xs text-muted", children: [
               i.summary,
@@ -475,19 +487,19 @@ function Re({ data: r, persona: s, onAsk: n }) {
     ] }),
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ e(y, { children: "Demo score status" }),
-      /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: r.finopsScoreReason })
+      /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: s.finopsScoreReason })
     ] })
   ] });
 }
 function We({
-  items: r,
-  title: s,
+  items: s,
+  title: r,
   demo: n,
   onSwitchToDemo: i,
   onRefresh: l,
   refreshing: u
 }) {
-  return /* @__PURE__ */ e("div", { className: "px-6 py-6 space-y-4", children: r.length > 0 ? /* @__PURE__ */ e("div", { className: "grid gap-3", children: r.map((o) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex gap-4", children: [
+  return /* @__PURE__ */ e("div", { className: "px-6 py-6 space-y-4", children: s.length > 0 ? /* @__PURE__ */ e("div", { className: "grid gap-3", children: s.map((o) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex gap-4", children: [
     /* @__PURE__ */ e("div", { className: "p-2 rounded-lg bg-emerald-500/10 text-emerald-600 h-fit", children: "↘" }),
     /* @__PURE__ */ t("div", { className: "flex-1 min-w-0", children: [
       /* @__PURE__ */ t("div", { className: "flex flex-wrap gap-2 items-center", children: [
@@ -500,17 +512,17 @@ function We({
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Potential saving" }),
           /* @__PURE__ */ t("b", { children: [
-            $(o.estimatedSaving),
+            L(o.estimatedSaving),
             "/mo"
           ] })
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Confidence" }),
-          /* @__PURE__ */ e(N, { tone: ae(o.confidence), children: o.confidence })
+          /* @__PURE__ */ e(N, { tone: ue(o.confidence), children: o.confidence })
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Risk" }),
-          /* @__PURE__ */ e(N, { tone: ae(o.risk), children: o.risk })
+          /* @__PURE__ */ e(N, { tone: ue(o.risk), children: o.risk })
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: "Resource" }),
@@ -522,11 +534,11 @@ function We({
         /* @__PURE__ */ e("pre", { className: "mt-2 p-2 bg-surface-muted/50 rounded whitespace-pre-wrap", children: JSON.stringify(o.evidence, null, 2) })
       ] })
     ] })
-  ] }) }, o.id)) }) : n ? /* @__PURE__ */ e(Ce, { title: `No ${s.toLowerCase()} records`, description: "Demo mode contains sample records." }) : /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "text-center py-8 max-w-lg mx-auto", children: [
+  ] }) }, o.id)) }) : n ? /* @__PURE__ */ e(Ce, { title: `No ${r.toLowerCase()} records`, description: "Demo mode contains sample records." }) : /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "text-center py-8 max-w-lg mx-auto", children: [
     /* @__PURE__ */ e("div", { className: "w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-3 text-xl font-bold", children: "✓" }),
     /* @__PURE__ */ t("h3", { className: "text-base font-semibold text-foreground", children: [
       "0 Active ",
-      s,
+      r,
       " Warnings Detected"
     ] }),
     /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-2 leading-relaxed", children: "AWS Cost Optimization Hub and Compute Optimizer were scanned for your active AWS profile. Your workload currently has no idle resources, abandoned EBS volumes, or rightsizing warnings." }),
@@ -561,7 +573,7 @@ function We({
     ] })
   ] }) }) });
 }
-function je({ runs: r, recommendations: s, onRefresh: n }) {
+function je({ runs: s, recommendations: r, onRefresh: n }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-5", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { children: [
@@ -573,12 +585,12 @@ function je({ runs: r, recommendations: s, onRefresh: n }) {
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ t(y, { children: [
         "Historical Query Runs (",
-        r.length,
+        s.length,
         ")"
       ] }),
       /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1", children: "Every refresh persists an immutable query record with request parameters and hash" }),
       /* @__PURE__ */ t("div", { className: "mt-4 divide-y divide-border", children: [
-        r.map((i) => /* @__PURE__ */ t("div", { className: "py-3 flex flex-wrap items-center justify-between gap-3 text-xs", children: [
+        s.map((i) => /* @__PURE__ */ t("div", { className: "py-3 flex flex-wrap items-center justify-between gap-3 text-xs", children: [
           /* @__PURE__ */ t("div", { children: [
             /* @__PURE__ */ e("div", { className: "font-medium text-sm font-mono text-foreground", children: i.id }),
             /* @__PURE__ */ t("div", { className: "text-muted mt-0.5", children: [
@@ -599,18 +611,18 @@ function je({ runs: r, recommendations: s, onRefresh: n }) {
             /* @__PURE__ */ e("div", { className: "text-muted mt-1", children: i.timestamp })
           ] })
         ] }, i.id)),
-        !r.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted py-3", children: "No durable evidence runs recorded yet. Run a live refresh to generate evidence." })
+        !s.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted py-3", children: "No durable evidence runs recorded yet. Run a live refresh to generate evidence." })
       ] })
     ] }),
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ t(y, { children: [
         "Recommendation Decision Lifecycle (",
-        s.length,
+        r.length,
         ")"
       ] }),
       /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1", children: "Identified → Reviewed → Approved → Implemented → Verified" }),
       /* @__PURE__ */ t("div", { className: "mt-4 divide-y divide-border text-xs", children: [
-        s.map((i) => /* @__PURE__ */ t("div", { className: "py-2.5 flex items-center justify-between gap-2", children: [
+        r.map((i) => /* @__PURE__ */ t("div", { className: "py-2.5 flex items-center justify-between gap-2", children: [
           /* @__PURE__ */ t("div", { children: [
             /* @__PURE__ */ e("span", { className: "font-medium text-foreground", children: i.what }),
             /* @__PURE__ */ t("span", { className: "text-muted ml-2", children: [
@@ -623,44 +635,44 @@ function je({ runs: r, recommendations: s, onRefresh: n }) {
           ] }),
           /* @__PURE__ */ e(N, { tone: i.status === "verified" ? "success" : i.status === "approved" ? "info" : "default", children: i.status })
         ] }, i.id)),
-        !s.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted py-2", children: "No recommendations currently stored." })
+        !r.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted py-2", children: "No recommendations currently stored." })
       ] })
     ] })
   ] });
 }
 function Me({
-  data: r,
-  profilesData: s,
+  data: s,
+  profilesData: r,
   policiesData: n,
   onSwitchProfile: i,
   onRefreshLive: l,
   refreshing: u
 }) {
-  var J, Z, _, K, X, Q, ee;
-  const [o, v] = x((s == null ? void 0 : s.activeProfile) || "default"), [a, h] = x((s == null ? void 0 : s.activeRegion) || "us-east-1"), [f, S] = x(""), [P, j] = x("full"), [k, L] = x(!1), [I, C] = x(!1), [O, M] = x(!1), [V, F] = x(null);
-  le(() => {
-    s != null && s.activeProfile && v(s.activeProfile), s != null && s.activeRegion && h(s.activeRegion);
-  }, [s]);
-  const B = async () => {
-    const d = (f.trim() || a).trim();
-    M(!0), F(null);
+  var Z, X, D, ee, te, K, re;
+  const [o, v] = x((r == null ? void 0 : r.activeProfile) || "default"), [c, p] = x((r == null ? void 0 : r.activeRegion) || "us-east-1"), [f, S] = x(""), [O, M] = x("full"), [P, H] = x(!1), [q, C] = x(!1), [W, F] = x(!1), [G, $] = x(null);
+  ce(() => {
+    r != null && r.activeProfile && v(r.activeProfile), r != null && r.activeRegion && p(r.activeRegion);
+  }, [r]);
+  const Q = async () => {
+    const d = (f.trim() || c).trim();
+    F(!0), $(null);
     try {
-      await i(o, d), F(`Scope applied: profile "${o}" in region "${d}"`), setTimeout(() => F(null), 4e3);
+      await i(o, d), $(`Scope applied: profile "${o}" in region "${d}"`), setTimeout(() => $(null), 4e3);
     } finally {
-      M(!1);
+      F(!1);
     }
-  }, g = ((J = n == null ? void 0 : n.policies) == null ? void 0 : J.find((d) => d.id === P)) || ((Z = n == null ? void 0 : n.policies) == null ? void 0 : Z[0]), H = () => {
+  }, g = ((Z = n == null ? void 0 : n.policies) == null ? void 0 : Z.find((d) => d.id === O)) || ((X = n == null ? void 0 : n.policies) == null ? void 0 : X[0]), U = () => {
     var d;
-    g != null && g.policyJson && ((d = navigator.clipboard) == null || d.writeText(g.policyJson), L(!0), setTimeout(() => L(!1), 2500));
+    g != null && g.policyJson && ((d = navigator.clipboard) == null || d.writeText(g.policyJson), H(!0), setTimeout(() => H(!1), 2500));
   }, w = () => {
-    var q;
-    const d = (f.trim() || a).trim(), T = `# 1. Opt-in to AWS Cost Optimization Hub (100% Free)
+    var V;
+    const d = (f.trim() || c).trim(), T = `# 1. Opt-in to AWS Cost Optimization Hub (100% Free)
 aws cost-optimization-hub update-enrollment-status --status Active --profile ${o} --region ${d}
 
 # 2. Opt-in to AWS Compute Optimizer (100% Free Standard Tier)
 aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
-    (q = navigator.clipboard) == null || q.writeText(T), C(!0), setTimeout(() => C(!1), 2500);
-  }, m = (s == null ? void 0 : s.callerIdentity) || (r == null ? void 0 : r.callerIdentity), D = (_ = s == null ? void 0 : s.profiles) != null && _.length ? s.profiles : ["default"], G = [
+    (V = navigator.clipboard) == null || V.writeText(T), C(!0), setTimeout(() => C(!1), 2500);
+  }, m = (r == null ? void 0 : r.callerIdentity) || (s == null ? void 0 : s.callerIdentity), se = (D = r == null ? void 0 : r.profiles) != null && D.length ? r.profiles : ["default"], Y = [
     { id: "us-east-1", label: "us-east-1 (N. Virginia)" },
     { id: "us-east-2", label: "us-east-2 (Ohio)" },
     { id: "us-west-1", label: "us-west-1 (N. California)" },
@@ -669,7 +681,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
     { id: "eu-central-1", label: "eu-central-1 (Frankfurt)" },
     { id: "ap-southeast-1", label: "ap-southeast-1 (Singapore)" },
     { id: "ap-northeast-1", label: "ap-northeast-1 (Tokyo)" }
-  ], W = (K = r == null ? void 0 : r.checks) == null ? void 0 : K.find((d) => d.name.includes("Cost Optimization Hub")), R = (X = r == null ? void 0 : r.checks) == null ? void 0 : X.find((d) => d.name.includes("Compute Optimizer"));
+  ], j = (ee = s == null ? void 0 : s.checks) == null ? void 0 : ee.find((d) => d.name.includes("Cost Optimization Hub")), R = (te = s == null ? void 0 : s.checks) == null ? void 0 : te.find((d) => d.name.includes("Compute Optimizer"));
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border", children: [
@@ -692,10 +704,10 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
                 value: o,
                 onChange: (d) => v(d.target.value),
                 className: "flex-1 bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent",
-                children: D.map((d) => /* @__PURE__ */ t("option", { value: d, children: [
+                children: se.map((d) => /* @__PURE__ */ t("option", { value: d, children: [
                   d,
                   " ",
-                  d === (s == null ? void 0 : s.activeProfile) ? "(active)" : ""
+                  d === (r == null ? void 0 : r.activeProfile) ? "(active)" : ""
                 ] }, d))
               }
             ) }),
@@ -715,13 +727,13 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               /* @__PURE__ */ t(
                 "select",
                 {
-                  value: G.some((d) => d.id === a) ? a : "custom",
+                  value: Y.some((d) => d.id === c) ? c : "custom",
                   onChange: (d) => {
-                    d.target.value !== "custom" && (h(d.target.value), S(""));
+                    d.target.value !== "custom" && (p(d.target.value), S(""));
                   },
                   className: "bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent",
                   children: [
-                    G.map((d) => /* @__PURE__ */ e("option", { value: d.id, children: d.label }, d.id)),
+                    Y.map((d) => /* @__PURE__ */ e("option", { value: d.id, children: d.label }, d.id)),
                     /* @__PURE__ */ e("option", { value: "custom", children: "Other / Custom Region…" })
                   ]
                 }
@@ -731,7 +743,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
                 {
                   type: "text",
                   placeholder: "e.g. ca-central-1",
-                  value: f || (G.some((d) => d.id === a) ? "" : a),
+                  value: f || (Y.some((d) => d.id === c) ? "" : c),
                   onChange: (d) => S(d.target.value),
                   className: "bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
                 }
@@ -740,7 +752,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
             /* @__PURE__ */ e("p", { className: "text-[11px] text-muted mt-1", children: "Cost Explorer queries use global us-east-1 billing endpoints; regional telemetry uses this target region." })
           ] }),
           /* @__PURE__ */ t("div", { className: "flex items-center gap-3 pt-1", children: [
-            /* @__PURE__ */ e(A, { onClick: B, disabled: O, children: O ? "Applying Scope…" : "Switch & Verify Profile" }),
+            /* @__PURE__ */ e(A, { onClick: Q, disabled: W, children: W ? "Applying Scope…" : "Switch & Verify Profile" }),
             /* @__PURE__ */ e(
               "button",
               {
@@ -751,9 +763,9 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               }
             )
           ] }),
-          V && /* @__PURE__ */ t("div", { className: "p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center gap-2", children: [
+          G && /* @__PURE__ */ t("div", { className: "p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center gap-2", children: [
             /* @__PURE__ */ e("span", { children: "✓" }),
-            /* @__PURE__ */ e("span", { children: V })
+            /* @__PURE__ */ e("span", { children: G })
           ] })
         ] }),
         /* @__PURE__ */ t("div", { className: "p-4 rounded-xl bg-surface-muted/40 border border-border flex flex-col justify-between", children: [
@@ -769,11 +781,11 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               ] }),
               /* @__PURE__ */ t("div", { className: "flex justify-between py-1 border-b border-border/50", children: [
                 /* @__PURE__ */ e("span", { className: "text-muted", children: "Active Profile:" }),
-                /* @__PURE__ */ e("span", { className: "text-accent font-semibold", children: (s == null ? void 0 : s.activeProfile) || o })
+                /* @__PURE__ */ e("span", { className: "text-accent font-semibold", children: (r == null ? void 0 : r.activeProfile) || o })
               ] }),
               /* @__PURE__ */ t("div", { className: "flex justify-between py-1 border-b border-border/50", children: [
                 /* @__PURE__ */ e("span", { className: "text-muted", children: "Active Region:" }),
-                /* @__PURE__ */ e("span", { className: "text-foreground", children: (s == null ? void 0 : s.activeRegion) || a })
+                /* @__PURE__ */ e("span", { className: "text-foreground", children: (r == null ? void 0 : r.activeRegion) || c })
               ] }),
               /* @__PURE__ */ t("div", { className: "py-1", children: [
                 /* @__PURE__ */ e("span", { className: "text-muted block mb-1", children: "IAM ARN:" }),
@@ -798,13 +810,13 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
             ". Ready for 1-click copy-paste into the AWS IAM Console."
           ] })
         ] }),
-        /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(A, { onClick: H, children: k ? "✓ Policy JSON Copied!" : "📋 Copy Policy JSON" }) })
+        /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(A, { onClick: U, children: P ? "✓ Policy JSON Copied!" : "📋 Copy Policy JSON" }) })
       ] }),
-      /* @__PURE__ */ e("div", { className: "grid sm:grid-cols-4 gap-2 mt-4", children: (Q = n == null ? void 0 : n.policies) == null ? void 0 : Q.map((d) => /* @__PURE__ */ t(
+      /* @__PURE__ */ e("div", { className: "grid sm:grid-cols-4 gap-2 mt-4", children: (K = n == null ? void 0 : n.policies) == null ? void 0 : K.map((d) => /* @__PURE__ */ t(
         "button",
         {
-          onClick: () => j(d.id),
-          className: `p-3 rounded-xl border text-left transition-all ${P === d.id ? "border-accent bg-accent/10 shadow-sm" : "border-border bg-surface hover:border-border/80"}`,
+          onClick: () => M(d.id),
+          className: `p-3 rounded-xl border text-left transition-all ${O === d.id ? "border-accent bg-accent/10 shadow-sm" : "border-border bg-surface hover:border-border/80"}`,
           children: [
             /* @__PURE__ */ t("div", { className: "flex items-center justify-between mb-1", children: [
               /* @__PURE__ */ e("span", { className: "text-[10px] font-bold uppercase tracking-wider text-muted", children: d.tier }),
@@ -848,16 +860,16 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               {
                 onClick: w,
                 className: "text-accent hover:underline text-[11px] font-medium",
-                children: I ? "✓ CLI Commands Copied" : "📋 Copy Opt-in Commands"
+                children: q ? "✓ CLI Commands Copied" : "📋 Copy Opt-in Commands"
               }
             )
           ] }),
           /* @__PURE__ */ t("div", { className: "grid md:grid-cols-2 gap-2 text-[11px]", children: [
             /* @__PURE__ */ t("div", { className: "flex items-center gap-2 p-2 rounded bg-surface-muted/50 border border-border/60", children: [
-              /* @__PURE__ */ e("span", { className: W != null && W.ok ? "text-emerald-500 font-bold" : "text-amber-500 font-bold", children: W != null && W.ok ? "✓" : "○" }),
+              /* @__PURE__ */ e("span", { className: j != null && j.ok ? "text-emerald-500 font-bold" : "text-amber-500 font-bold", children: j != null && j.ok ? "✓" : "○" }),
               /* @__PURE__ */ t("div", { children: [
                 /* @__PURE__ */ e("div", { className: "font-semibold", children: "Cost Optimization Hub (100% Free)" }),
-                /* @__PURE__ */ e("div", { className: "text-muted", children: (W == null ? void 0 : W.detail) || "Opt-in required for automated rightsizing" })
+                /* @__PURE__ */ e("div", { className: "text-muted", children: (j == null ? void 0 : j.detail) || "Opt-in required for automated rightsizing" })
               ] })
             ] }),
             /* @__PURE__ */ t("div", { className: "flex items-center gap-2 p-2 rounded bg-surface-muted/50 border border-border/60", children: [
@@ -879,9 +891,9 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
             /* @__PURE__ */ e(
               "button",
               {
-                onClick: H,
+                onClick: U,
                 className: "text-accent hover:underline text-xs font-medium flex items-center gap-1",
-                children: /* @__PURE__ */ e("span", { children: k ? "✓ Copied to clipboard" : "📋 Copy JSON" })
+                children: /* @__PURE__ */ e("span", { children: P ? "✓ Copied to clipboard" : "📋 Copy JSON" })
               }
             )
           ] }),
@@ -935,7 +947,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
           }
         )
       ] }),
-      /* @__PURE__ */ e("div", { className: "grid md:grid-cols-2 gap-3", children: (ee = r == null ? void 0 : r.checks) == null ? void 0 : ee.map((d) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex gap-3 items-start", children: [
+      /* @__PURE__ */ e("div", { className: "grid md:grid-cols-2 gap-3", children: (re = s == null ? void 0 : s.checks) == null ? void 0 : re.map((d) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex gap-3 items-start", children: [
         /* @__PURE__ */ e("div", { className: `mt-0.5 text-sm ${d.ok ? "text-emerald-500 font-bold" : "text-amber-500 font-bold"}`, children: d.ok ? "✓" : "○" }),
         /* @__PURE__ */ t("div", { className: "flex-1 min-w-0", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between gap-2", children: [
@@ -948,7 +960,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
     ] })
   ] });
 }
-function Fe({ onAsk: r }) {
+function Fe({ onAsk: s }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ t(b, { children: [
     /* @__PURE__ */ e(y, { children: "Ask an evidence-backed question" }),
     /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: "The FinOps Agent uses live, read-only AWS tools and deterministic arithmetic." }),
@@ -959,40 +971,40 @@ function Fe({ onAsk: r }) {
       "Where am I wasting money?",
       "Compare this month against last month.",
       "Find my highest-confidence optimization opportunities."
-    ].map((n) => /* @__PURE__ */ e("button", { className: "text-left p-3 rounded-lg border border-border hover:border-accent text-sm transition-colors", onClick: () => r(n), children: n }, n)) })
+    ].map((n) => /* @__PURE__ */ e("button", { className: "text-left p-3 rounded-lg border border-border hover:border-accent text-sm transition-colors", onClick: () => s(n), children: n }, n)) })
   ] }) });
 }
-function Te({
-  config: r,
-  onUpdate: s,
+function $e({
+  config: s,
+  onUpdate: r,
   onTriggerSweep: n,
   runningSweep: i,
   sweepResult: l
 }) {
-  var g, H;
-  const [u, o] = x((r == null ? void 0 : r.enabled) || !1), [v, a] = x((r == null ? void 0 : r.frequency) || "daily"), [h, f] = x((r == null ? void 0 : r.thresholdDollars) || "10.00"), [S, P] = x((r == null ? void 0 : r.thresholdPercent) || "15.0"), [j, k] = x(!1), [L, I] = x(null), [C, O] = x(!1);
-  le(() => {
-    r && (o(r.enabled), a(r.frequency), f(r.thresholdDollars), P(r.thresholdPercent));
-  }, [r]);
-  const M = async (w) => {
-    k(!0), I(null);
+  var g, U;
+  const [u, o] = x((s == null ? void 0 : s.enabled) || !1), [v, c] = x((s == null ? void 0 : s.frequency) || "daily"), [p, f] = x((s == null ? void 0 : s.thresholdDollars) || "10.00"), [S, O] = x((s == null ? void 0 : s.thresholdPercent) || "15.0"), [M, P] = x(!1), [H, q] = x(null), [C, W] = x(!1);
+  ce(() => {
+    s && (o(s.enabled), c(s.frequency), f(s.thresholdDollars), O(s.thresholdPercent));
+  }, [s]);
+  const F = async (w) => {
+    P(!0), q(null);
     try {
       const m = w !== void 0 ? w : u;
-      await s({
+      await r({
         enabled: m,
         frequency: v,
-        thresholdDollars: h,
+        thresholdDollars: p,
         thresholdPercent: S
-      }), I(m ? "Schedule active & configured" : "Schedule paused"), setTimeout(() => I(null), 3e3);
+      }), q(m ? "Schedule active & configured" : "Schedule paused"), setTimeout(() => q(null), 3e3);
     } finally {
-      k(!1);
+      P(!1);
     }
-  }, V = () => {
+  }, G = () => {
     const w = !u;
-    o(w), M(w);
-  }, F = v === "daily" ? ((g = r == null ? void 0 : r.cliCommands) == null ? void 0 : g.daily) || 'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse."' : ((H = r == null ? void 0 : r.cliCommands) == null ? void 0 : H.weekly) || 'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest."', B = () => {
+    o(w), F(w);
+  }, $ = v === "daily" ? ((g = s == null ? void 0 : s.cliCommands) == null ? void 0 : g.daily) || 'kirocrew cron add "aws-finops-daily" "Run daily AWS cost and anomaly pulse." --cron "0 8 * * *" --agent finops-agent' : ((U = s == null ? void 0 : s.cliCommands) == null ? void 0 : U.weekly) || 'kirocrew cron add "aws-finops-weekly" "Run weekly executive FinOps digest." --cron "0 9 * * 1" --agent finops-agent', Q = () => {
     var w;
-    (w = navigator.clipboard) == null || w.writeText(F), O(!0), setTimeout(() => O(!1), 2500);
+    (w = navigator.clipboard) == null || w.writeText($), W(!0), setTimeout(() => W(!1), 2500);
   };
   return /* @__PURE__ */ t(b, { children: [
     /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border", children: [
@@ -1006,8 +1018,8 @@ function Te({
       /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(
         "button",
         {
-          onClick: V,
-          disabled: j,
+          onClick: G,
+          disabled: M,
           className: `px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${u ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/40 hover:bg-emerald-500/25" : "bg-surface-muted text-muted border border-border hover:bg-surface-muted/80"}`,
           children: u ? "● Schedule: ON" : "○ Schedule: OFF"
         }
@@ -1022,7 +1034,7 @@ function Te({
               "button",
               {
                 type: "button",
-                onClick: () => a("daily"),
+                onClick: () => c("daily"),
                 className: `p-3 rounded-xl border text-left transition-all ${v === "daily" ? "border-accent bg-accent/10 text-accent font-medium" : "border-border bg-surface-muted/30 text-muted hover:border-border/80"}`,
                 children: [
                   /* @__PURE__ */ e("div", { className: "text-xs font-bold text-foreground", children: "Daily Pulse" }),
@@ -1035,7 +1047,7 @@ function Te({
               "button",
               {
                 type: "button",
-                onClick: () => a("weekly"),
+                onClick: () => c("weekly"),
                 className: `p-3 rounded-xl border text-left transition-all ${v === "weekly" ? "border-accent bg-accent/10 text-accent font-medium" : "border-border bg-surface-muted/30 text-muted hover:border-border/80"}`,
                 children: [
                   /* @__PURE__ */ e("div", { className: "text-xs font-bold text-foreground", children: "Weekly Digest" }),
@@ -1055,7 +1067,7 @@ function Te({
                 "input",
                 {
                   type: "text",
-                  value: h,
+                  value: p,
                   onChange: (w) => f(w.target.value),
                   placeholder: "10.00",
                   className: "w-full bg-surface-muted/60 border border-border rounded-lg pl-6 pr-3 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
@@ -1072,7 +1084,7 @@ function Te({
                 {
                   type: "text",
                   value: S,
-                  onChange: (w) => P(w.target.value),
+                  onChange: (w) => O(w.target.value),
                   placeholder: "15.0",
                   className: "w-full bg-surface-muted/60 border border-border rounded-lg px-3 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
                 }
@@ -1083,7 +1095,7 @@ function Te({
           ] })
         ] }),
         /* @__PURE__ */ t("div", { className: "flex items-center gap-3 pt-1", children: [
-          /* @__PURE__ */ e(A, { onClick: () => M(), disabled: j, children: j ? "Saving…" : "Save Schedule Settings" }),
+          /* @__PURE__ */ e(A, { onClick: () => F(), disabled: M, children: M ? "Saving…" : "Save Schedule Settings" }),
           /* @__PURE__ */ e(
             "button",
             {
@@ -1094,23 +1106,23 @@ function Te({
             }
           )
         ] }),
-        L && /* @__PURE__ */ t("div", { className: "p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center gap-2", children: [
+        H && /* @__PURE__ */ t("div", { className: "p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center gap-2", children: [
           /* @__PURE__ */ e("span", { children: "✓" }),
-          /* @__PURE__ */ e("span", { children: L })
+          /* @__PURE__ */ e("span", { children: H })
         ] })
       ] }),
       /* @__PURE__ */ t("div", { className: "space-y-4", children: [
         /* @__PURE__ */ t("div", { className: "p-3.5 rounded-xl bg-surface-muted/40 border border-border", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between text-xs font-semibold mb-2", children: [
             /* @__PURE__ */ e("span", { children: "Latest Sweep Status" }),
-            r != null && r.lastStatus ? /* @__PURE__ */ e(N, { tone: r.lastStatus === "clean" ? "success" : "alert", children: r.lastStatus === "clean" ? "Normal Baseline" : "Threshold Exceeded" }) : /* @__PURE__ */ e("span", { className: "text-[11px] text-muted", children: "No runs yet" })
+            s != null && s.lastStatus ? /* @__PURE__ */ e(N, { tone: s.lastStatus === "clean" ? "success" : "alert", children: s.lastStatus === "clean" ? "Normal Baseline" : "Threshold Exceeded" }) : /* @__PURE__ */ e("span", { className: "text-[11px] text-muted", children: "No runs yet" })
           ] }),
-          r != null && r.lastRun ? /* @__PURE__ */ t("div", { className: "space-y-1 text-xs", children: [
+          s != null && s.lastRun ? /* @__PURE__ */ t("div", { className: "space-y-1 text-xs", children: [
             /* @__PURE__ */ t("div", { className: "text-muted text-[11px] font-mono", children: [
               "Last Run: ",
-              r.lastRun
+              s.lastRun
             ] }),
-            /* @__PURE__ */ e("p", { className: "text-xs text-foreground mt-1 leading-relaxed", children: r.lastSummary })
+            /* @__PURE__ */ e("p", { className: "text-xs text-foreground mt-1 leading-relaxed", children: s.lastSummary })
           ] }) : /* @__PURE__ */ e("p", { className: "text-xs text-muted leading-relaxed", children: "Run an immediate test sweep or enable recurring schedules to record telemetry checkpoints in SQLite." }),
           l && /* @__PURE__ */ t("div", { className: "mt-3 pt-3 border-t border-border/80 text-xs space-y-1", children: [
             /* @__PURE__ */ t("div", { className: "font-semibold flex items-center gap-1.5 text-foreground", children: [
@@ -1129,22 +1141,22 @@ function Te({
             /* @__PURE__ */ e(
               "button",
               {
-                onClick: B,
+                onClick: Q,
                 className: "text-accent hover:underline text-xs font-medium",
                 children: C ? "✓ Copied" : "📋 Copy Command"
               }
             )
           ] }),
-          /* @__PURE__ */ e("p", { className: "text-[11px] text-muted leading-relaxed", children: "Prefer managing background jobs via CLI? Copy and run this command in your terminal:" }),
-          /* @__PURE__ */ e("pre", { className: "p-2.5 rounded-lg bg-surface border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap select-all", children: F })
+          /* @__PURE__ */ e("p", { className: "text-[11px] text-muted leading-relaxed", children: "This schedule is automatically synchronized with your Kiro Crew background jobs. You can also deploy it via CLI if you prefer:" }),
+          /* @__PURE__ */ e("pre", { className: "p-2.5 rounded-lg bg-surface border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap select-all", children: $ })
         ] })
       ] })
     ] })
   ] });
 }
-function ze({
-  scheduleConfig: r,
-  onUpdateSchedule: s,
+function Te({
+  scheduleConfig: s,
+  onUpdateSchedule: r,
   onTriggerSweep: n,
   runningSweep: i,
   sweepResult: l,
@@ -1154,10 +1166,10 @@ function ze({
 }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ e(
-      Te,
+      $e,
       {
-        config: r,
-        onUpdate: s,
+        config: s,
+        onUpdate: r,
         onTriggerSweep: n,
         runningSweep: i,
         sweepResult: l
@@ -1178,19 +1190,19 @@ function ze({
           }
         )
       ] }),
-      u ? /* @__PURE__ */ e("div", { className: "space-y-3", children: o.map((a) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex justify-between items-start", children: [
+      u ? /* @__PURE__ */ e("div", { className: "space-y-3", children: o.map((c) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex justify-between items-start", children: [
         /* @__PURE__ */ t("div", { children: [
-          /* @__PURE__ */ e(y, { children: a.service }),
-          /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: a.summary })
+          /* @__PURE__ */ e(y, { children: c.service }),
+          /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: c.summary })
         ] }),
         /* @__PURE__ */ t("div", { className: "text-right", children: [
-          /* @__PURE__ */ e("b", { children: $(a.impact) }),
+          /* @__PURE__ */ e("b", { children: L(c.impact) }),
           /* @__PURE__ */ t("div", { className: "text-xs text-muted", children: [
             "estimated impact · ",
-            a.date
+            c.date
           ] })
         ] })
-      ] }) }, a.date + a.service)) }) : /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "py-6 text-center max-w-md mx-auto space-y-2", children: [
+      ] }) }, c.date + c.service)) }) : /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "py-6 text-center max-w-md mx-auto space-y-2", children: [
         /* @__PURE__ */ e("div", { className: "w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto text-lg font-bold", children: "✓" }),
         /* @__PURE__ */ e("h4", { className: "text-sm font-semibold text-foreground", children: "0 Active AWS Cost Anomalies" }),
         /* @__PURE__ */ e("p", { className: "text-xs text-muted leading-relaxed", children: "AWS Cost Anomaly Detection has reported no severe unexpected spikes for this account scope. Recurring background sweeps will monitor telemetry as workloads run." })
@@ -1198,79 +1210,79 @@ function ze({
     ] })
   ] });
 }
-function $e({ items: r }) {
+function ze({ items: s }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ t(b, { children: [
     /* @__PURE__ */ e(y, { children: "Demo service breakdown" }),
-    /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((s) => /* @__PURE__ */ t("div", { className: "py-3 grid grid-cols-3", children: [
-      /* @__PURE__ */ e("b", { children: s.service }),
-      /* @__PURE__ */ e("span", { children: $(s.cost) }),
-      /* @__PURE__ */ t("span", { className: (s.changePercent || 0) > 0 ? "text-amber-600" : "text-emerald-600", children: [
-        (s.changePercent || 0) > 0 ? "+" : "",
-        s.changePercent,
+    /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: s.map((r) => /* @__PURE__ */ t("div", { className: "py-3 grid grid-cols-3", children: [
+      /* @__PURE__ */ e("b", { children: r.service }),
+      /* @__PURE__ */ e("span", { children: L(r.cost) }),
+      /* @__PURE__ */ t("span", { className: (r.changePercent || 0) > 0 ? "text-amber-600" : "text-emerald-600", children: [
+        (r.changePercent || 0) > 0 ? "+" : "",
+        r.changePercent,
         "%"
       ] })
-    ] }, s.service)) }),
+    ] }, r.service)) }),
     /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-4", children: "Synthetic values shown only because Demo mode is enabled." })
   ] }) });
 }
-function ie({ title: r, text: s, action: n }) {
+function ae({ title: s, text: r, action: n }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "max-w-xl py-8 mx-auto text-center", children: [
-    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(te, { className: "w-8 h-8" }) }),
-    /* @__PURE__ */ e("h2", { className: "text-lg font-semibold mt-3", children: r }),
-    /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2 mb-4", children: s }),
+    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(ie, { className: "w-8 h-8" }) }),
+    /* @__PURE__ */ e("h2", { className: "text-lg font-semibold mt-3", children: s }),
+    /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2 mb-4", children: r }),
     /* @__PURE__ */ e(A, { onClick: n, children: "Open FinOps Agent" })
   ] }) }) });
 }
-function oe(r) {
-  return r.split(/(\*\*.*?\*\*|`.*?`)/g).map((n, i) => n.startsWith("**") && n.endsWith("**") ? /* @__PURE__ */ e("strong", { className: "text-foreground font-semibold", children: n.slice(2, -2) }, i) : n.startsWith("`") && n.endsWith("`") ? /* @__PURE__ */ e("code", { className: "px-1 py-0.5 rounded bg-surface-muted text-accent font-mono text-[11px]", children: n.slice(1, -1) }, i) : n);
+function pe(s) {
+  return s.split(/(\*\*.*?\*\*|`.*?`)/g).map((n, i) => n.startsWith("**") && n.endsWith("**") ? /* @__PURE__ */ e("strong", { className: "text-foreground font-semibold", children: n.slice(2, -2) }, i) : n.startsWith("`") && n.endsWith("`") ? /* @__PURE__ */ e("code", { className: "px-1 py-0.5 rounded bg-surface-muted text-accent font-mono text-[11px]", children: n.slice(1, -1) }, i) : n);
 }
-function Ee({ content: r }) {
-  const s = r.split(`
+function Ee({ content: s }) {
+  const r = s.split(`
 `), n = [];
   let i = [], l = !1;
-  const u = (v, a) => {
+  const u = (v, c) => {
     if (!v.length) return null;
-    const h = v[0], f = v.slice(v.length > 1 && v[1].every((S) => S.trim().match(/^-+$/)) ? 2 : 1);
+    const p = v[0], f = v.slice(v.length > 1 && v[1].every((S) => S.trim().match(/^-+$/)) ? 2 : 1);
     return /* @__PURE__ */ e("div", { className: "overflow-x-auto my-3 rounded-lg border border-border", children: /* @__PURE__ */ t("table", { className: "w-full text-xs text-left", children: [
-      /* @__PURE__ */ e("thead", { className: "bg-surface-muted border-b border-border text-foreground font-semibold", children: /* @__PURE__ */ e("tr", { children: h.map((S, P) => /* @__PURE__ */ e("th", { className: "px-3 py-2", children: S.trim() }, P)) }) }),
-      /* @__PURE__ */ e("tbody", { className: "divide-y divide-border font-mono text-[11px]", children: f.map((S, P) => /* @__PURE__ */ e("tr", { className: "hover:bg-surface-muted/30", children: S.map((j, k) => /* @__PURE__ */ e("td", { className: "px-3 py-1.5", children: j.trim() }, k)) }, P)) })
-    ] }) }, `table-${a}`);
+      /* @__PURE__ */ e("thead", { className: "bg-surface-muted border-b border-border text-foreground font-semibold", children: /* @__PURE__ */ e("tr", { children: p.map((S, O) => /* @__PURE__ */ e("th", { className: "px-3 py-2", children: S.trim() }, O)) }) }),
+      /* @__PURE__ */ e("tbody", { className: "divide-y divide-border font-mono text-[11px]", children: f.map((S, O) => /* @__PURE__ */ e("tr", { className: "hover:bg-surface-muted/30", children: S.map((M, P) => /* @__PURE__ */ e("td", { className: "px-3 py-1.5", children: M.trim() }, P)) }, O)) })
+    ] }) }, `table-${c}`);
   }, o = () => {
     l && i.length && (n.push(u(i, n.length)), i = [], l = !1);
   };
-  return s.forEach((v, a) => {
-    const h = v.trim();
-    if (h.startsWith("|") && h.endsWith("|")) {
+  return r.forEach((v, c) => {
+    const p = v.trim();
+    if (p.startsWith("|") && p.endsWith("|")) {
       l = !0;
-      const f = h.split("|").slice(1, -1);
+      const f = p.split("|").slice(1, -1);
       i.push(f);
       return;
     } else
       o();
-    h ? h.startsWith("# ") ? n.push(/* @__PURE__ */ e("h1", { className: "text-xl font-bold text-foreground mt-4 mb-2", children: h.slice(2) }, a)) : h.startsWith("## ") ? n.push(/* @__PURE__ */ e("h2", { className: "text-base font-semibold text-foreground mt-4 mb-2 pb-1 border-b border-border", children: h.slice(3) }, a)) : h.startsWith("### ") ? n.push(/* @__PURE__ */ e("h3", { className: "text-sm font-semibold text-foreground mt-3 mb-1", children: h.slice(4) }, a)) : h === "---" ? n.push(/* @__PURE__ */ e("hr", { className: "border-border my-4" }, a)) : h.startsWith("- ") || h.startsWith("* ") ? n.push(
+    p ? p.startsWith("# ") ? n.push(/* @__PURE__ */ e("h1", { className: "text-xl font-bold text-foreground mt-4 mb-2", children: p.slice(2) }, c)) : p.startsWith("## ") ? n.push(/* @__PURE__ */ e("h2", { className: "text-base font-semibold text-foreground mt-4 mb-2 pb-1 border-b border-border", children: p.slice(3) }, c)) : p.startsWith("### ") ? n.push(/* @__PURE__ */ e("h3", { className: "text-sm font-semibold text-foreground mt-3 mb-1", children: p.slice(4) }, c)) : p === "---" ? n.push(/* @__PURE__ */ e("hr", { className: "border-border my-4" }, c)) : p.startsWith("- ") || p.startsWith("* ") ? n.push(
       /* @__PURE__ */ t("div", { className: "flex gap-2 text-xs text-muted leading-relaxed my-0.5 ml-2", children: [
         /* @__PURE__ */ e("span", { className: "text-accent", children: "•" }),
-        /* @__PURE__ */ e("span", { children: oe(h.slice(2)) })
-      ] }, a)
+        /* @__PURE__ */ e("span", { children: pe(p.slice(2)) })
+      ] }, c)
     ) : n.push(
-      /* @__PURE__ */ e("p", { className: "text-xs text-muted leading-relaxed my-1", children: oe(h) }, a)
-    ) : n.push(/* @__PURE__ */ e("div", { className: "h-2" }, `blank-${a}`));
+      /* @__PURE__ */ e("p", { className: "text-xs text-muted leading-relaxed my-1", children: pe(p) }, c)
+    ) : n.push(/* @__PURE__ */ e("div", { className: "h-2" }, `blank-${c}`));
   }), o(), /* @__PURE__ */ e("div", { className: "space-y-1", children: n });
 }
 function Le({
-  reports: r,
-  selectedReport: s,
+  reports: s,
+  selectedReport: r,
   onSelectReport: n,
   onGenerate: i,
   generating: l,
   onAskAgent: u,
   onOpenSchedules: o
 }) {
-  const [v, a] = x(!1), h = (f) => {
+  const [v, c] = x(!1), p = (f) => {
     var S;
-    (S = navigator.clipboard) == null || S.writeText(f), a(!0), setTimeout(() => a(!1), 2e3);
+    (S = navigator.clipboard) == null || S.writeText(f), c(!0), setTimeout(() => c(!1), 2e3);
   };
-  return s ? /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
+  return r ? /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
     /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border", children: [
       /* @__PURE__ */ t("div", { className: "flex items-center gap-3", children: [
         /* @__PURE__ */ e(
@@ -1281,11 +1293,11 @@ function Le({
             children: "← Back to Report Archive"
           }
         ),
-        /* @__PURE__ */ e(N, { tone: s.type === "executive" ? "success" : "info", children: s.type })
+        /* @__PURE__ */ e(N, { tone: r.type === "executive" ? "success" : "info", children: r.type })
       ] }),
-      /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(A, { onClick: () => h(s.contentMarkdown), children: v ? "✓ Copied" : "Copy Report Markdown" }) })
+      /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(A, { onClick: () => p(r.contentMarkdown), children: v ? "✓ Copied" : "Copy Report Markdown" }) })
     ] }),
-    s.type === "backlog" && (s.contentMarkdown.includes("Identified Opportunities: 0") || s.contentMarkdown.includes("0 active optimization opportunities")) && /* @__PURE__ */ t("div", { className: "p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-foreground flex items-center gap-3", children: [
+    r.type === "backlog" && (r.contentMarkdown.includes("Identified Opportunities: 0") || r.contentMarkdown.includes("0 active optimization opportunities")) && /* @__PURE__ */ t("div", { className: "p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-foreground flex items-center gap-3", children: [
       /* @__PURE__ */ e("span", { className: "text-emerald-500 font-bold text-base", children: "✓" }),
       /* @__PURE__ */ t("div", { className: "flex-1", children: [
         /* @__PURE__ */ e("div", { className: "font-semibold text-emerald-600 dark:text-emerald-400", children: "Live Optimization Scan Complete: 0 Waste Opportunities Detected" }),
@@ -1294,15 +1306,15 @@ function Le({
     ] }),
     /* @__PURE__ */ t(b, { children: [
       /* @__PURE__ */ t("div", { className: "mb-4", children: [
-        /* @__PURE__ */ e(y, { children: s.title }),
+        /* @__PURE__ */ e(y, { children: r.title }),
         /* @__PURE__ */ t("div", { className: "text-xs text-muted mt-1 font-mono", children: [
           "Scope: ",
-          /* @__PURE__ */ e("strong", { className: "text-foreground", children: s.scope }),
+          /* @__PURE__ */ e("strong", { className: "text-foreground", children: r.scope }),
           " · Created: ",
-          s.createdAt
+          r.createdAt
         ] })
       ] }),
-      /* @__PURE__ */ e("div", { className: "p-4 rounded-xl bg-surface-muted/30 border border-border", children: /* @__PURE__ */ e(Ee, { content: s.contentMarkdown }) })
+      /* @__PURE__ */ e("div", { className: "p-4 rounded-xl bg-surface-muted/30 border border-border", children: /* @__PURE__ */ e(Ee, { content: r.contentMarkdown }) })
     ] })
   ] }) : /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-surface-muted/50 border border-border", children: [
@@ -1344,13 +1356,13 @@ function Le({
       /* @__PURE__ */ t("div", { className: "flex items-center justify-between", children: [
         /* @__PURE__ */ t("h3", { className: "text-sm font-semibold text-foreground", children: [
           "Saved Reports (",
-          r.length,
+          s.length,
           ")"
         ] }),
         /* @__PURE__ */ e("span", { className: "text-xs text-muted", children: "Persisted in local SQLite database" })
       ] }),
       /* @__PURE__ */ t("div", { className: "grid gap-3", children: [
-        r.map((f) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex flex-wrap items-start justify-between gap-4", children: [
+        s.map((f) => /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "flex flex-wrap items-start justify-between gap-4", children: [
           /* @__PURE__ */ t("div", { className: "flex-1 min-w-[280px]", children: [
             /* @__PURE__ */ t("div", { className: "flex items-center gap-2", children: [
               /* @__PURE__ */ e(N, { tone: f.type === "executive" ? "success" : "info", children: f.type }),
@@ -1369,7 +1381,7 @@ function Le({
             /* @__PURE__ */ e(
               "button",
               {
-                onClick: () => h(f.contentMarkdown),
+                onClick: () => p(f.contentMarkdown),
                 className: "p-2 rounded-lg border border-border text-xs text-muted hover:text-foreground hover:bg-surface-muted transition-colors",
                 title: "Copy Markdown",
                 children: "📋"
@@ -1377,8 +1389,8 @@ function Le({
             )
           ] })
         ] }) }, f.id)),
-        !r.length && /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "text-center py-8", children: [
-          /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(te, { className: "w-8 h-8" }) }),
+        !s.length && /* @__PURE__ */ e(b, { children: /* @__PURE__ */ t("div", { className: "text-center py-8", children: [
+          /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(ie, { className: "w-8 h-8" }) }),
           /* @__PURE__ */ e("h4", { className: "text-sm font-semibold text-foreground", children: "No Reports Generated Yet" }),
           /* @__PURE__ */ e("p", { className: "text-xs text-muted max-w-sm mx-auto mt-1 mb-4", children: "Generate your first monthly executive report or optimization backlog from live AWS billing telemetry." }),
           /* @__PURE__ */ e(A, { onClick: () => i("executive"), children: "Generate Executive Report Now" })

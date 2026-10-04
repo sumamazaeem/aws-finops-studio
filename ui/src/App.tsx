@@ -124,6 +124,30 @@ export default function App(){
     try{
       const res:any=await api.post('/apps/aws-finops-studio/api/schedules',updates);
       if(res?.schedule) setScheduleConfig(res.schedule);
+
+      const cfg = res?.schedule || { ...scheduleConfig, ...updates };
+      const profile = profilesData?.activeProfile || 'default';
+      const freq = cfg.frequency || 'daily';
+
+      const existing: any = await api.get('/api/crons');
+      const jobsArray = existing?.jobs ? existing.jobs : (Array.isArray(existing) ? existing : []);
+      const finopsJobs = jobsArray.filter((j: any) => j.name === 'aws-finops-daily' || j.name === 'aws-finops-weekly');
+      for (const job of finopsJobs) {
+        if (job.id) await api.delete(`/api/crons/${job.id}`);
+      }
+
+      if (cfg.enabled) {
+        const msg = freq === 'daily'
+          ? `Run daily AWS cost and anomaly pulse for profile ${profile}. Check for service cost spikes >$${cfg.thresholdDollars} or >${cfg.thresholdPercent}%. Keep report concise and evidence-backed.`
+          : `Run weekly executive FinOps digest and optimization backlog audit for profile ${profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities.`;
+        
+        await api.post('/api/crons', {
+          name: freq === 'daily' ? 'aws-finops-daily' : 'aws-finops-weekly',
+          message: msg,
+          cron: freq === 'daily' ? "0 8 * * *" : "0 9 * * 1",
+          agent: "finops-agent"
+        });
+      }
     }catch(e:any){
       setError(e.message||'Failed to update schedule');
     }
@@ -1270,8 +1294,8 @@ function ScheduleManager({
   }
 
   const activeCliCommand = frequency === 'daily'
-    ? config?.cliCommands?.daily || 'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse."'
-    : config?.cliCommands?.weekly || 'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest."'
+    ? config?.cliCommands?.daily || 'kirocrew cron add "aws-finops-daily" "Run daily AWS cost and anomaly pulse." --cron "0 8 * * *" --agent finops-agent'
+    : config?.cliCommands?.weekly || 'kirocrew cron add "aws-finops-weekly" "Run weekly executive FinOps digest." --cron "0 9 * * 1" --agent finops-agent'
 
   const copyCliCommand = () => {
     navigator.clipboard?.writeText(activeCliCommand)
@@ -1448,7 +1472,7 @@ function ScheduleManager({
               </button>
             </div>
             <p className="text-[11px] text-muted leading-relaxed">
-              Prefer managing background jobs via CLI? Copy and run this command in your terminal:
+              This schedule is automatically synchronized with your Kiro Crew background jobs. You can also deploy it via CLI if you prefer:
             </p>
             <pre className="p-2.5 rounded-lg bg-surface border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap select-all">
               {activeCliCommand}

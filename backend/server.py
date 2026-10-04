@@ -725,8 +725,8 @@ def get_schedule_config():
     scope = get_active_scope()
     profile = scope["profile"]
     cfg["cliCommands"] = {
-        "daily": f'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse for profile {profile}. Check for service cost spikes >${cfg["thresholdDollars"]} or >{cfg["thresholdPercent"]}%. Keep report concise and evidence-backed."',
-        "weekly": f'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest and optimization backlog audit for profile {profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities."'
+        "daily": f'kirocrew cron add "aws-finops-daily" "Run daily AWS cost and anomaly pulse for profile {profile}. Check for service cost spikes >${cfg["thresholdDollars"]} or >{cfg["thresholdPercent"]}%. Keep report concise and evidence-backed." --cron "0 8 * * *" --agent finops-agent',
+        "weekly": f'kirocrew cron add "aws-finops-weekly" "Run weekly executive FinOps digest and optimization backlog audit for profile {profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities." --cron "0 9 * * 1" --agent finops-agent'
     }
     return cfg
 
