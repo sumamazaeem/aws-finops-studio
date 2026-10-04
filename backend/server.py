@@ -1044,7 +1044,18 @@ class Handler(BaseHTTPRequestHandler):
         data=json.dumps(payload).encode(); self.send_response(code); self.send_header("Content-Type","application/json"); self.send_header("Content-Length",str(len(data))); self.send_header("Cache-Control","no-store"); self.send_header("X-Content-Type-Options","nosniff"); self.end_headers(); self.wfile.write(data)
     def auth(self,method,body=b""):
         if urlparse(self.path).path in {"/health","/api/health"}: return True
-        if verify_proxy_request and verify_proxy_request(self.headers.get("X-KiroCrew-Proxy",""),method=method,target=self.path,body=body): return True
+        if verify_proxy_request:
+            proxy_hdr = self.headers.get("X-KiroCrew-Proxy","")
+            if verify_proxy_request(proxy_hdr,method=method,target=self.path,body=body): return True
+            try:
+                secret_path = Path(__file__).parent.parent / ".app_secret"
+                if secret_path.is_file():
+                    disk_secret = secret_path.read_text().strip()
+                    if disk_secret and verify_proxy_request(proxy_hdr,method=method,target=self.path,body=body,secret=disk_secret):
+                        os.environ["KIROCREW_PROXY_SECRET"] = disk_secret
+                        return True
+            except Exception:
+                pass
         if os.environ.get("FINOPS_DEV_ALLOW_DIRECT")=="1" and self.client_address[0] in {"127.0.0.1","::1"}: return True
         self.reply(401,{"error":"unauthorized"}); return False
     def do_GET(self):
