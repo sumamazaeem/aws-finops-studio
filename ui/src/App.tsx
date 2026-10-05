@@ -96,6 +96,10 @@ function FinOpsCubeIcon({ className = "w-6 h-6" }: { className?: string }) {
 
 export default function App(){
   const api=useAppApi(); const {openChat}=useChatLauncher(); const [tab,setTab]=useState('Overview'); const [demo,setDemo]=useState(()=>{try{return localStorage.getItem('aws-finops-studio:demo')==='true'}catch{return false}}); const [persona,setPersona]=useState<Persona>('Practitioner'); const [overview,setOverview]=useState<Overview|null>(null); const [recs,setRecs]=useState<Rec[]>([]); const [evidenceRuns,setEvidenceRuns]=useState<EvidenceRun[]>([]); const [diag,setDiag]=useState<any>(null); const [error,setError]=useState(''); const [refreshing,setRefreshing]=useState(false);
+  const [timeRange, setTimeRange] = useState('30');
+  const [tagFilter, setTagFilter] = useState('');
+  const [slackWebhook, setSlackWebhook] = useState('');
+  const [s3Bucket, setS3Bucket] = useState('');
   const [reports,setReports]=useState<any[]>([]); const [selectedReport,setSelectedReport]=useState<any|null>(null); const [generatingReport,setGeneratingReport]=useState<string|null>(null)
   const [profilesData,setProfilesData]=useState<ProfilesData|null>(null)
   const [policiesData,setPoliciesData]=useState<{activeProfile:string;activeRegion:string;policies:PolicyTemplate[]}|null>(null)
@@ -220,7 +224,7 @@ export default function App(){
     if(!overview) return <div className="p-6 grid gap-4 grid-cols-3"><Skeleton/><Skeleton/><Skeleton/></div>
     if(tab==='Overview') {
       return overview.mode==='live'
-        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing}/>
+        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing} timeRange={timeRange} setTimeRange={setTimeRange} tagFilter={tagFilter} setTagFilter={setTagFilter}/>
         : <OverviewPage data={overview} persona={persona} onAsk={()=>ask('Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.')}/>
     }
     if(tab==='Optimization'||tab==='Resources') return (
@@ -485,7 +489,7 @@ function ApprovalPanel({onRefresh,refreshing}:{onRefresh:()=>void;refreshing:boo
   )
 }
 
-function LiveOverview({data,persona,onAsk,onRefresh,refreshing}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean}){
+function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTimeRange,tagFilter,setTagFilter}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean,timeRange:string,setTimeRange:any,tagFilter:string,setTagFilter:any}){
   const previous=data.live?.previousMonth,current=data.live?.monthToDate
   return (
     <div className="px-6 py-6 space-y-4">
@@ -1746,6 +1750,43 @@ function ReportsView({
             </Badge>
           </div>
           <div className="flex items-center gap-2">
+            
+            <button
+              onClick={() => {
+                const blob = new Blob([selectedReport.contentMarkdown], {type: 'text/markdown'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${selectedReport.id}.md`;
+                a.click();
+              }}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              ↓ Download MD
+            </button>
+            <button
+              onClick={() => {
+                // Generate a naive CSV representation of the report
+                const lines = selectedReport.contentMarkdown.split('\n');
+                const csv = lines.map((l: string) => `"${l.replace(/"/g, '""')}"`).join('\n');
+                const blob = new Blob([csv], {type: 'text/csv'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${selectedReport.id}.csv`;
+                a.click();
+              }}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              ↓ CSV
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              🖨️ PDF / Print
+            </button>
+
             <Btn onClick={() => copyMarkdown(selectedReport.contentMarkdown)}>
               {copied ? '✓ Copied' : 'Copy Report Markdown'}
             </Btn>
