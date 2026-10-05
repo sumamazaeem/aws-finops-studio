@@ -1,33 +1,33 @@
 import { jsxs as t, jsx as e } from "react/jsx-runtime";
 import { useState as m, useEffect as me, useMemo as Pe } from "react";
 import { useAppApi as Re, useChatLauncher as Oe } from "@kirocrew/app-sdk";
-import { Skeleton as ce, PageHeader as We, ErrorNotice as je, Card as f, Btn as O, Badge as S, CardTitle as k, StatCard as Y, EmptyState as Me } from "@kirocrew/app-sdk/ui";
-const Fe = [
+import { Skeleton as ce, PageHeader as We, Card as f, Btn as O, Badge as S, CardTitle as k, StatCard as Y, EmptyState as je } from "@kirocrew/app-sdk/ui";
+const Me = [
   { id: "Practitioner", label: "Practitioner", icon: "🛡️", desc: "Full query lineage, raw hashes, and FinOps evidence audit" },
   { id: "Finance", label: "Finance", icon: "💼", desc: "Pre-credit unblended costs, adjustments, credits, refunds, and net ledger" },
   { id: "Engineering", label: "Engineering", icon: "⚙️", desc: "Cost drivers, period-over-period deltas, and actionable rightsizing" },
   { id: "Leadership", label: "Leadership", icon: "📊", desc: "Executive cost trajectory, realized savings, and active optimization pipeline" }
-], Te = [["Overview", "◫"], ["Cost Explorer", "▥"], ["Optimization", "↘"], ["Anomalies", "△"], ["Resources", "▤"], ["Commitments", "◇"], ["Well-Architected", "✓"], ["Ask FinOps", "✦"], ["Reports", "▧"], ["History", "◷"], ["Connection", "⚙"]], L = (r) => new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(r)), B = (r) => {
+], Fe = [["Overview", "◫"], ["Cost Explorer", "▥"], ["Optimization", "↘"], ["Anomalies", "△"], ["Resources", "▤"], ["Commitments", "◇"], ["Well-Architected", "✓"], ["Ask FinOps", "✦"], ["Reports", "▧"], ["History", "◷"], ["Connection", "⚙"]], L = (r) => new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(Number(r)), B = (r) => {
   const n = Number(r);
   return new Intl.NumberFormat(void 0, { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(n) < 5e-3 ? 0 : n);
 }, ge = (r) => r === "high" ? "success" : r === "medium" ? "warning" : "default";
-function le({ className: r = "w-6 h-6" }) {
+function de({ className: r = "w-6 h-6" }) {
   return /* @__PURE__ */ t("svg", { className: r, viewBox: "0 0 44 48", fill: "none", xmlns: "http://www.w3.org/2000/svg", children: [
     /* @__PURE__ */ e("path", { d: "M22 1.15L3.5 12.05L22 22.34L40.5 12.05L22 1.15Z", fill: "#00E5A3" }),
     /* @__PURE__ */ e("path", { d: "M18.8 47.66L0.5 37.36V16.71L18.8 27.01V47.66Z", fill: "#00C693" }),
     /* @__PURE__ */ e("path", { d: "M25.2 47.66L43.5 37.36V16.71L25.2 27.01V47.66Z", fill: "#00966F" })
   ] });
 }
-function Ke() {
-  const r = Re(), { openChat: n } = Oe(), [s, i] = m("Overview"), [l, p] = m(() => {
+function _e() {
+  const r = Re(), { openChat: n } = Oe(), [s, i] = m("Overview"), [d, p] = m(() => {
     try {
       return localStorage.getItem("aws-finops-studio:demo") === "true";
     } catch {
       return !1;
     }
-  }), [o, g] = m("Practitioner"), [c, x] = m(null), [h, b] = m([]), [N, P] = m([]), [w, T] = m(null), [H, A] = m(""), [M, $] = m(!1), [G, U] = m("30"), [Z, C] = m(""), [J, R] = m(""), [v, ue] = m(""), [Q, j] = m([]), [F, _] = m(null), [K, X] = m(null), [y, D] = m(null), [ee, se] = m(null), [d, te] = m(null), [re, he] = m(!1), [pe, xe] = m(null), de = () => {
+  }), [o, g] = m("Practitioner"), [c, x] = m(null), [h, b] = m([]), [N, P] = m([]), [w, T] = m(null), [H, A] = m(""), [M, $] = m(!1), [G, U] = m("30"), [Z, C] = m(""), [J, R] = m(""), [v, ue] = m(""), [Q, j] = m([]), [F, _] = m(null), [K, X] = m(null), [y, D] = m(null), [ee, se] = m(null), [l, te] = m(null), [re, he] = m(!1), [pe, xe] = m(null), le = () => {
     x(null), A("");
-    const a = "/apps/aws-finops-studio/api", u = l ? "demo" : "live";
+    const a = "/apps/aws-finops-studio/api", u = d ? "demo" : "live";
     Promise.all([
       r.get(`${a}/overview?mode=${u}`),
       r.get(`${a}/recommendations?mode=${u}`),
@@ -44,7 +44,7 @@ function Ke() {
     try {
       const u = await r.post("/apps/aws-finops-studio/api/schedules", a);
       u != null && u.schedule && te(u.schedule);
-      const W = (u == null ? void 0 : u.schedule) || { ...d, ...a }, ie = (y == null ? void 0 : y.activeProfile) || "default", V = W.frequency || "daily", E = await r.get("/api/crons"), ae = (E != null && E.jobs ? E.jobs : Array.isArray(E) ? E : []).filter((I) => I.name === "aws-finops-daily" || I.name === "aws-finops-weekly");
+      const W = (u == null ? void 0 : u.schedule) || { ...l, ...a }, ie = (y == null ? void 0 : y.activeProfile) || "default", V = W.frequency || "daily", E = await r.get("/api/crons"), ae = (E != null && E.jobs ? E.jobs : Array.isArray(E) ? E : []).filter((I) => I.name === "aws-finops-daily" || I.name === "aws-finops-weekly");
       for (const I of ae)
         I.id && await r.delete(`/api/crons/${I.id}`);
       if (W.enabled) {
@@ -74,11 +74,11 @@ function Ke() {
   };
   me(() => {
     try {
-      localStorage.setItem("aws-finops-studio:demo", String(l));
+      localStorage.setItem("aws-finops-studio:demo", String(d));
     } catch {
     }
-    de();
-  }, [l]);
+    le();
+  }, [d]);
   const q = (a) => n({ agent: "finops-agent", message: a, autoSend: !0 }), ne = async () => {
     $(!0), A("");
     try {
@@ -97,7 +97,7 @@ function Ke() {
     A(""), $(!0);
     try {
       const W = await r.post("/apps/aws-finops-studio/api/profiles", { profile: a, region: u });
-      D(W), de();
+      D(W), le();
     } catch (W) {
       A(W.message || "Failed to switch AWS profile");
     } finally {
@@ -106,25 +106,25 @@ function Ke() {
   }, Ce = async (a) => {
     X(a), A("");
     try {
-      const u = await r.post("/apps/aws-finops-studio/api/reports", { type: a, mode: l ? "demo" : "live" });
+      const u = await r.post("/apps/aws-finops-studio/api/reports", { type: a, mode: d ? "demo" : "live" });
       u != null && u.items && j(u.items), u != null && u.report && _(u.report);
     } catch (u) {
       A(u.message || "Failed to generate report");
     } finally {
       X(null);
     }
-  }, ke = Pe(() => c ? s === "Overview" ? c.mode === "live" ? /* @__PURE__ */ e($e, { data: c, persona: o, onAsk: q, onRefresh: ne, refreshing: M, timeRange: G, setTimeRange: U, tagFilter: Z, setTagFilter: C }) : /* @__PURE__ */ e(Ee, { data: c, persona: o, onAsk: () => q("Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.") }) : s === "Optimization" || s === "Resources" ? /* @__PURE__ */ e(
-    Le,
+  }, ke = Pe(() => c ? s === "Overview" ? c.mode === "live" ? /* @__PURE__ */ e(Te, { data: c, persona: o, onAsk: q, onRefresh: ne, refreshing: M, timeRange: G, setTimeRange: U, tagFilter: Z, setTagFilter: C }) : /* @__PURE__ */ e(ze, { data: c, persona: o, onAsk: () => q("Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.") }) : s === "Optimization" || s === "Resources" ? /* @__PURE__ */ e(
+    Ee,
     {
       items: h,
       title: s,
-      demo: l,
+      demo: d,
       onSwitchToDemo: () => p(!0),
       onRefresh: ne,
       refreshing: M
     }
-  ) : s === "History" ? /* @__PURE__ */ e(Ie, { runs: N, recommendations: h, onRefresh: de }) : s === "Connection" ? /* @__PURE__ */ e(
-    He,
+  ) : s === "History" ? /* @__PURE__ */ e(Le, { runs: N, recommendations: h, onRefresh: le }) : s === "Connection" ? /* @__PURE__ */ e(
+    Ie,
     {
       data: w,
       profilesData: y,
@@ -133,20 +133,20 @@ function Ke() {
       onRefreshLive: ne,
       refreshing: M
     }
-  ) : s === "Ask FinOps" ? /* @__PURE__ */ e(Ue, { onAsk: q }) : s === "Anomalies" ? /* @__PURE__ */ e(
-    Be,
+  ) : s === "Ask FinOps" ? /* @__PURE__ */ e(He, { onAsk: q }) : s === "Anomalies" ? /* @__PURE__ */ e(
+    qe,
     {
-      scheduleConfig: d,
+      scheduleConfig: l,
       onUpdateSchedule: we,
       onTriggerSweep: Se,
       runningSweep: re,
       sweepResult: pe,
-      demo: l,
+      demo: d,
       anomalies: c.anomalies,
       onAsk: q
     }
-  ) : s === "Cost Explorer" ? c.mode === "demo" ? /* @__PURE__ */ e(Ve, { items: c.drivers }) : c.dataAvailable ? /* @__PURE__ */ e(ze, { drivers: c.drivers, previous: c.previousDrivers || [], onRefresh: ne, refreshing: M }) : /* @__PURE__ */ e(ye, { onRefresh: ne, refreshing: M }) : s === "Commitments" ? /* @__PURE__ */ e(oe, { title: "Commitment intelligence", text: "Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed.", action: () => q("Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.") }) : s === "Well-Architected" ? /* @__PURE__ */ e(oe, { title: "Cost Optimization review", text: "Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance.", action: () => q("Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.") }) : s === "Reports" ? /* @__PURE__ */ e(
-    Je,
+  ) : s === "Cost Explorer" ? c.mode === "demo" ? /* @__PURE__ */ e(Be, { items: c.drivers }) : c.dataAvailable ? /* @__PURE__ */ e($e, { drivers: c.drivers, previous: c.previousDrivers || [], onRefresh: ne, refreshing: M }) : /* @__PURE__ */ e(ye, { onRefresh: ne, refreshing: M }) : s === "Commitments" ? /* @__PURE__ */ e(oe, { title: "Commitment intelligence", text: "Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed.", action: () => q("Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.") }) : s === "Well-Architected" ? /* @__PURE__ */ e(oe, { title: "Cost Optimization review", text: "Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance.", action: () => q("Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.") }) : s === "Reports" ? /* @__PURE__ */ e(
+    Ge,
     {
       reports: Q,
       selectedReport: F,
@@ -160,13 +160,13 @@ function Ke() {
     /* @__PURE__ */ e(ce, {}),
     /* @__PURE__ */ e(ce, {}),
     /* @__PURE__ */ e(ce, {})
-  ] }), [s, c, h, N, Q, F, K, w, y, ee, l, o, M, d, re, pe]), z = (c == null ? void 0 : c.callerIdentity) || (w == null ? void 0 : w.callerIdentity);
+  ] }), [s, c, h, N, Q, F, K, w, y, ee, d, o, M, l, re, pe]), z = (c == null ? void 0 : c.callerIdentity) || (w == null ? void 0 : w.callerIdentity);
   return /* @__PURE__ */ t("div", { className: "h-full min-h-0 flex bg-surface text-foreground", children: [
     /* @__PURE__ */ t("aside", { className: "w-64 shrink-0 border-r border-border bg-surface-muted/40 p-3 overflow-y-auto flex flex-col justify-between", children: [
       /* @__PURE__ */ t("div", { children: [
         /* @__PURE__ */ t("div", { className: "p-3 mb-2", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center gap-2.5 font-semibold", children: [
-            /* @__PURE__ */ e("div", { className: "p-1.5 rounded-xl bg-surface border border-border shadow-sm flex items-center justify-center shrink-0", children: /* @__PURE__ */ e(le, { className: "w-5 h-5" }) }),
+            /* @__PURE__ */ e("div", { className: "p-1.5 rounded-xl bg-surface border border-border shadow-sm flex items-center justify-center shrink-0", children: /* @__PURE__ */ e(de, { className: "w-5 h-5" }) }),
             /* @__PURE__ */ t("div", { children: [
               /* @__PURE__ */ e("div", { className: "leading-tight", children: "AWS FinOps Studio" }),
               /* @__PURE__ */ e("div", { className: "text-[10px] text-muted uppercase tracking-wider font-mono", children: "v0.1.0 · Read-Only" })
@@ -177,9 +177,9 @@ function Ke() {
         /* @__PURE__ */ t("div", { className: "px-3 py-2 mb-3 rounded-lg border border-border/80 bg-surface/60 text-xs", children: [
           /* @__PURE__ */ t("div", { className: "text-[10px] uppercase font-bold text-muted flex items-center justify-between", children: [
             /* @__PURE__ */ e("span", { children: "Active Scope" }),
-            /* @__PURE__ */ e("span", { className: `w-2 h-2 rounded-full ${l ? "bg-amber-500" : z != null && z.verified ? "bg-emerald-500" : "bg-muted"}` })
+            /* @__PURE__ */ e("span", { className: `w-2 h-2 rounded-full ${d ? "bg-amber-500" : z != null && z.verified ? "bg-emerald-500" : "bg-muted"}` })
           ] }),
-          !l && (y != null && y.profiles) && y.profiles.length > 1 ? /* @__PURE__ */ e("div", { className: "mt-1.5", children: /* @__PURE__ */ e(
+          !d && (y != null && y.profiles) && y.profiles.length > 1 ? /* @__PURE__ */ e("div", { className: "mt-1.5", children: /* @__PURE__ */ e(
             "select",
             {
               value: y.activeProfile,
@@ -190,10 +190,10 @@ function Ke() {
                 a
               ] }, a))
             }
-          ) }) : /* @__PURE__ */ e("div", { className: "font-medium mt-1 truncate", children: l ? "Synthetic Sandbox" : z != null && z.accountMasked ? `Account ${z.accountMasked}` : `Profile: ${(y == null ? void 0 : y.activeProfile) || "default"}` }),
+          ) }) : /* @__PURE__ */ e("div", { className: "font-medium mt-1 truncate", children: d ? "Synthetic Sandbox" : z != null && z.accountMasked ? `Account ${z.accountMasked}` : `Profile: ${(y == null ? void 0 : y.activeProfile) || "default"}` }),
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between text-[11px] text-muted mt-1 truncate", children: [
-            /* @__PURE__ */ e("span", { children: l ? "Mock AWS Environment" : `${(y == null ? void 0 : y.activeRegion) || (z == null ? void 0 : z.region) || "us-east-1"} · Read-only` }),
-            !l && /* @__PURE__ */ e(
+            /* @__PURE__ */ e("span", { children: d ? "Mock AWS Environment" : `${(y == null ? void 0 : y.activeRegion) || (z == null ? void 0 : z.region) || "us-east-1"} · Read-only` }),
+            !d && /* @__PURE__ */ e(
               "button",
               {
                 onClick: () => i("Connection"),
@@ -203,7 +203,7 @@ function Ke() {
             )
           ] })
         ] }),
-        /* @__PURE__ */ e("nav", { className: "space-y-1", children: Te.map(([a, u]) => /* @__PURE__ */ t("button", { onClick: () => i(a), className: `w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${s === a ? "bg-accent/15 text-accent font-medium" : "text-muted hover:bg-surface-muted"}`, children: [
+        /* @__PURE__ */ e("nav", { className: "space-y-1", children: Fe.map(([a, u]) => /* @__PURE__ */ t("button", { onClick: () => i(a), className: `w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left transition-colors ${s === a ? "bg-accent/15 text-accent font-medium" : "text-muted hover:bg-surface-muted"}`, children: [
           /* @__PURE__ */ e("span", { className: "w-4 text-center", "aria-hidden": !0, children: u }),
           a
         ] }, a)) })
@@ -211,18 +211,18 @@ function Ke() {
       /* @__PURE__ */ e("div", { className: "mt-4 pt-3 border-t border-border", children: /* @__PURE__ */ t(
         "div",
         {
-          onClick: () => p(!l),
-          className: `p-3 rounded-xl border cursor-pointer select-none transition-all ${l ? "border-border bg-surface-muted/40 hover:border-border/80" : "border-emerald-500/40 bg-emerald-500/10 hover:border-emerald-500/60"}`,
+          onClick: () => p(!d),
+          className: `p-3 rounded-xl border cursor-pointer select-none transition-all ${d ? "border-border bg-surface-muted/40 hover:border-border/80" : "border-emerald-500/40 bg-emerald-500/10 hover:border-emerald-500/60"}`,
           children: [
             /* @__PURE__ */ t("div", { className: "flex items-center justify-between gap-3", children: [
               /* @__PURE__ */ t("div", { className: "flex items-center gap-1.5", children: [
-                /* @__PURE__ */ e("span", { className: `w-2 h-2 rounded-full ${l ? "bg-muted-foreground/40" : "bg-emerald-500"}` }),
+                /* @__PURE__ */ e("span", { className: `w-2 h-2 rounded-full ${d ? "bg-muted-foreground/40" : "bg-emerald-500"}` }),
                 /* @__PURE__ */ e("span", { className: "text-xs font-semibold text-foreground", children: "Live AWS" }),
                 /* @__PURE__ */ e(
                   "span",
                   {
-                    className: `text-[10px] font-bold px-1.5 py-0.5 rounded ${l ? "bg-surface-muted text-muted" : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"}`,
-                    children: l ? "OFF" : "ON"
+                    className: `text-[10px] font-bold px-1.5 py-0.5 rounded ${d ? "bg-surface-muted text-muted" : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"}`,
+                    children: d ? "OFF" : "ON"
                   }
                 )
               ] }),
@@ -231,22 +231,22 @@ function Ke() {
                 {
                   type: "button",
                   role: "switch",
-                  "aria-checked": !l,
+                  "aria-checked": !d,
                   "aria-label": "Toggle Live AWS",
                   onClick: (a) => {
-                    a.stopPropagation(), p(!l);
+                    a.stopPropagation(), p(!d);
                   },
-                  className: `relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${l ? "bg-slate-300 dark:bg-slate-600" : "bg-emerald-500"}`,
+                  className: `relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${d ? "bg-slate-300 dark:bg-slate-600" : "bg-emerald-500"}`,
                   children: /* @__PURE__ */ e(
                     "span",
                     {
-                      className: `pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${l ? "translate-x-0" : "translate-x-5"}`
+                      className: `pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${d ? "translate-x-0" : "translate-x-5"}`
                     }
                   )
                 }
               )
             ] }),
-            /* @__PURE__ */ e("p", { className: "text-[11px] text-muted mt-2 leading-snug", children: l ? "Demo sandbox mode. Turn ON for real AWS telemetry." : "Connected to live AWS. Real billing queries & strict evidence." })
+            /* @__PURE__ */ e("p", { className: "text-[11px] text-muted mt-2 leading-snug", children: d ? "Demo sandbox mode. Turn ON for real AWS telemetry." : "Connected to live AWS. Real billing queries & strict evidence." })
           ]
         }
       ) })
@@ -254,7 +254,7 @@ function Ke() {
     /* @__PURE__ */ t("main", { className: "flex-1 min-w-0 overflow-y-auto", children: [
       /* @__PURE__ */ t("div", { className: "px-6 pt-5 pb-3 border-b border-border flex flex-wrap items-center justify-between gap-4", children: [
         /* @__PURE__ */ e(We, { title: s, subtitle: "Deterministic, read-only AWS financial operations workspace" }),
-        /* @__PURE__ */ e("div", { className: "flex items-center gap-1.5 p-1 bg-surface-muted rounded-xl border border-border", children: Fe.map((a) => /* @__PURE__ */ t(
+        /* @__PURE__ */ e("div", { className: "flex items-center gap-1.5 p-1 bg-surface-muted rounded-xl border border-border", children: Me.map((a) => /* @__PURE__ */ t(
           "button",
           {
             onClick: () => g(a.id),
@@ -268,13 +268,13 @@ function Ke() {
           a.id
         )) })
       ] }),
-      H && /* @__PURE__ */ e("div", { className: "px-6 mt-4", children: /* @__PURE__ */ e(je, { message: H }) }),
+      H && /* @__PURE__ */ e("div", { className: "px-6 mt-4", children: /* @__PURE__ */ e("div", { className: "p-3 bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg text-sm", children: H }) }),
       ke
     ] })
   ] });
 }
 function ve({ title: r, data: n, persona: s }) {
-  const i = Math.abs(Number(n.credits)), l = Number(n.costBeforeCredits), p = l > 0 ? (i / l * 100).toFixed(1) : "0.0";
+  const i = Math.abs(Number(n.credits)), d = Number(n.costBeforeCredits), p = d > 0 ? (i / d * 100).toFixed(1) : "0.0";
   return /* @__PURE__ */ t(f, { children: [
     /* @__PURE__ */ t("div", { className: "flex items-start justify-between gap-3", children: [
       /* @__PURE__ */ t("div", { children: [
@@ -322,7 +322,7 @@ function ve({ title: r, data: n, persona: s }) {
 }
 function ye({ onRefresh: r, refreshing: n }) {
   return /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "max-w-2xl py-8 mx-auto text-center", children: [
-    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(le, { className: "w-10 h-10" }) }),
+    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(de, { className: "w-10 h-10" }) }),
     /* @__PURE__ */ e("h2", { className: "text-lg font-semibold mt-3", children: "Load live AWS evidence" }),
     /* @__PURE__ */ t("p", { className: "text-sm text-muted mt-2", children: [
       "Executes two fixed read-only AWS Cost Explorer queries using profile ",
@@ -332,7 +332,7 @@ function ye({ onRefresh: r, refreshing: n }) {
     /* @__PURE__ */ e("div", { className: "mt-5", children: /* @__PURE__ */ e(O, { onClick: r, disabled: n, children: n ? "Loading live AWS data…" : "Approve & load live AWS data" }) })
   ] }) });
 }
-function $e({ data: r, persona: n, onAsk: s, onRefresh: i, refreshing: l, timeRange: p, setTimeRange: o, tagFilter: g, setTagFilter: c }) {
+function Te({ data: r, persona: n, onAsk: s, onRefresh: i, refreshing: d, timeRange: p, setTimeRange: o, tagFilter: g, setTagFilter: c }) {
   var b, N, P, w;
   const x = (b = r.live) == null ? void 0 : b.previousMonth, h = (N = r.live) == null ? void 0 : N.monthToDate;
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
@@ -354,7 +354,7 @@ function $e({ data: r, persona: n, onAsk: s, onRefresh: i, refreshing: l, timeRa
         ] })
       ] })
     ] }),
-    !r.dataAvailable && /* @__PURE__ */ e(ye, { onRefresh: i, refreshing: l }),
+    !r.dataAvailable && /* @__PURE__ */ e(ye, { onRefresh: i, refreshing: d }),
     x && /* @__PURE__ */ e(ve, { title: "Previous complete month", data: x, persona: n }),
     h && /* @__PURE__ */ e(ve, { title: "Month to date", data: h, persona: n }),
     r.dataAvailable && n === "Leadership" && /* @__PURE__ */ t(f, { children: [
@@ -377,13 +377,13 @@ function $e({ data: r, persona: n, onAsk: s, onRefresh: i, refreshing: l, timeRa
     r.dataAvailable && /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3", children: [
       /* @__PURE__ */ e("div", { className: "text-xs text-muted", children: ((w = r.live) == null ? void 0 : w.refreshedAt) && `Last refreshed: ${r.live.refreshedAt}` }),
       /* @__PURE__ */ t("div", { className: "flex flex-wrap gap-2", children: [
-        /* @__PURE__ */ e(O, { onClick: i, disabled: l, children: l ? "Refreshing…" : "Refresh live AWS data" }),
+        /* @__PURE__ */ e(O, { onClick: i, disabled: d, children: d ? "Refreshing…" : "Refresh live AWS data" }),
         /* @__PURE__ */ e(O, { onClick: () => s("Use live AWS data only with profile default. Analyze month-to-date gross usage charges versus credits and refunds using RECORD_TYPE evidence. Report cost before credits, credits, refunds, discounts, taxes, and net cost separately; preserve raw API evidence and do not use demo data."), children: "Explain credits" })
       ] })
     ] }) })
   ] });
 }
-function ze({ drivers: r, previous: n, onRefresh: s, refreshing: i }) {
+function $e({ drivers: r, previous: n, onRefresh: s, refreshing: i }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-4", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { children: [
@@ -395,36 +395,36 @@ function ze({ drivers: r, previous: n, onRefresh: s, refreshing: i }) {
     /* @__PURE__ */ t(f, { children: [
       /* @__PURE__ */ e(k, { children: "Month-to-Date Services & MoM Change" }),
       /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1", children: "UnblendedCost · Excludes Credit & Refund record types" }),
-      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((l) => {
-        const p = Number(l.costDelta || 0);
+      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((d) => {
+        const p = Number(d.costDelta || 0);
         return /* @__PURE__ */ t("div", { className: "py-3 flex items-center justify-between gap-4", children: [
-          /* @__PURE__ */ e("span", { className: "font-medium text-sm", children: l.service }),
+          /* @__PURE__ */ e("span", { className: "font-medium text-sm", children: d.service }),
           /* @__PURE__ */ t("div", { className: "flex items-center gap-3 text-right", children: [
-            l.changePercent !== null && l.changePercent !== void 0 && /* @__PURE__ */ t(S, { tone: p > 0 ? "warning" : "success", children: [
+            d.changePercent !== null && d.changePercent !== void 0 && /* @__PURE__ */ t(S, { tone: p > 0 ? "warning" : "success", children: [
               p > 0 ? "+" : "",
-              l.changePercent,
+              d.changePercent,
               "% (",
               p > 0 ? "+" : "",
-              B(l.costDelta || 0),
+              B(d.costDelta || 0),
               ")"
             ] }),
-            /* @__PURE__ */ e("b", { className: "font-mono text-sm", children: B(l.cost) })
+            /* @__PURE__ */ e("b", { className: "font-mono text-sm", children: B(d.cost) })
           ] })
-        ] }, l.service);
+        ] }, d.service);
       }) }),
       !r.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No service groups returned." })
     ] }),
     /* @__PURE__ */ t(f, { children: [
       /* @__PURE__ */ e(k, { children: "Previous Complete Month by Service" }),
-      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: n.map((l) => /* @__PURE__ */ t("div", { className: "py-3 flex justify-between gap-4 text-sm", children: [
-        /* @__PURE__ */ e("span", { children: l.service }),
-        /* @__PURE__ */ e("b", { className: "font-mono", children: B(l.cost) })
-      ] }, l.service)) }),
+      /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: n.map((d) => /* @__PURE__ */ t("div", { className: "py-3 flex justify-between gap-4 text-sm", children: [
+        /* @__PURE__ */ e("span", { children: d.service }),
+        /* @__PURE__ */ e("b", { className: "font-mono", children: B(d.cost) })
+      ] }, d.service)) }),
       !n.length && /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-3", children: "No previous services returned." })
     ] })
   ] });
 }
-function Ee({ data: r, persona: n, onAsk: s }) {
+function ze({ data: r, persona: n, onAsk: s }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-5", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { className: "flex items-center gap-2", children: [
@@ -491,12 +491,12 @@ function Ee({ data: r, persona: n, onAsk: s }) {
     ] })
   ] });
 }
-function Le({
+function Ee({
   items: r,
   title: n,
   demo: s,
   onSwitchToDemo: i,
-  onRefresh: l,
+  onRefresh: d,
   refreshing: p
 }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6 space-y-4", children: r.length > 0 ? /* @__PURE__ */ e("div", { className: "grid gap-3", children: r.map((o) => /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "flex gap-4", children: [
@@ -534,7 +534,7 @@ function Le({
         /* @__PURE__ */ e("pre", { className: "mt-2 p-2 bg-surface-muted/50 rounded whitespace-pre-wrap", children: JSON.stringify(o.evidence, null, 2) })
       ] })
     ] })
-  ] }) }, o.id)) }) : s ? /* @__PURE__ */ e(Me, { title: `No ${n.toLowerCase()} records`, description: "Demo mode contains sample records." }) : /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "text-center py-8 max-w-lg mx-auto", children: [
+  ] }) }, o.id)) }) : s ? /* @__PURE__ */ e(je, { title: `No ${n.toLowerCase()} records`, description: "Demo mode contains sample records." }) : /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "text-center py-8 max-w-lg mx-auto", children: [
     /* @__PURE__ */ e("div", { className: "w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto mb-3 text-xl font-bold", children: "✓" }),
     /* @__PURE__ */ t("h3", { className: "text-base font-semibold text-foreground", children: [
       "0 Active ",
@@ -564,7 +564,7 @@ function Le({
       /* @__PURE__ */ e(
         "button",
         {
-          onClick: l,
+          onClick: d,
           disabled: p,
           className: "px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-surface-muted text-foreground transition-colors",
           children: p ? "Scanning AWS…" : "↻ Re-scan AWS Telemetry"
@@ -573,7 +573,7 @@ function Le({
     ] })
   ] }) }) });
 }
-function Ie({ runs: r, recommendations: n, onRefresh: s }) {
+function Le({ runs: r, recommendations: n, onRefresh: s }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-5", children: [
     /* @__PURE__ */ t("div", { className: "flex justify-between items-center", children: [
       /* @__PURE__ */ t("div", { children: [
@@ -640,12 +640,12 @@ function Ie({ runs: r, recommendations: n, onRefresh: s }) {
     ] })
   ] });
 }
-function He({
+function Ie({
   data: r,
   profilesData: n,
   policiesData: s,
   onSwitchProfile: i,
-  onRefreshLive: l,
+  onRefreshLive: d,
   refreshing: p
 }) {
   var _, K, X, y, D, ee, se;
@@ -654,20 +654,20 @@ function He({
     n != null && n.activeProfile && g(n.activeProfile), n != null && n.activeRegion && x(n.activeRegion);
   }, [n]);
   const Z = async () => {
-    const d = (h.trim() || c).trim();
+    const l = (h.trim() || c).trim();
     $(!0), U(null);
     try {
-      await i(o, d), U(`Scope applied: profile "${o}" in region "${d}"`), setTimeout(() => U(null), 4e3);
+      await i(o, l), U(`Scope applied: profile "${o}" in region "${l}"`), setTimeout(() => U(null), 4e3);
     } finally {
       $(!1);
     }
-  }, C = ((_ = s == null ? void 0 : s.policies) == null ? void 0 : _.find((d) => d.id === N)) || ((K = s == null ? void 0 : s.policies) == null ? void 0 : K[0]), J = () => {
-    var d;
-    C != null && C.policyJson && ((d = navigator.clipboard) == null || d.writeText(C.policyJson), T(!0), setTimeout(() => T(!1), 2500));
+  }, C = ((_ = s == null ? void 0 : s.policies) == null ? void 0 : _.find((l) => l.id === N)) || ((K = s == null ? void 0 : s.policies) == null ? void 0 : K[0]), J = () => {
+    var l;
+    C != null && C.policyJson && ((l = navigator.clipboard) == null || l.writeText(C.policyJson), T(!0), setTimeout(() => T(!1), 2500));
   }, R = () => {
     var re;
-    const d = (h.trim() || c).trim(), te = `# 1. Opt-in to AWS Cost Optimization Hub (100% Free)
-aws cost-optimization-hub update-enrollment-status --status Active --profile ${o} --region ${d}
+    const l = (h.trim() || c).trim(), te = `# 1. Opt-in to AWS Cost Optimization Hub (100% Free)
+aws cost-optimization-hub update-enrollment-status --status Active --profile ${o} --region ${l}
 
 # 2. Opt-in to AWS Compute Optimizer (100% Free Standard Tier)
 aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
@@ -681,7 +681,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
     { id: "eu-central-1", label: "eu-central-1 (Frankfurt)" },
     { id: "ap-southeast-1", label: "ap-southeast-1 (Singapore)" },
     { id: "ap-northeast-1", label: "ap-northeast-1 (Tokyo)" }
-  ], j = (y = r == null ? void 0 : r.checks) == null ? void 0 : y.find((d) => d.name.includes("Cost Optimization Hub")), F = (D = r == null ? void 0 : r.checks) == null ? void 0 : D.find((d) => d.name.includes("Compute Optimizer"));
+  ], j = (y = r == null ? void 0 : r.checks) == null ? void 0 : y.find((l) => l.name.includes("Cost Optimization Hub")), F = (D = r == null ? void 0 : r.checks) == null ? void 0 : D.find((l) => l.name.includes("Compute Optimizer"));
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ t(f, { children: [
       /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border", children: [
@@ -702,13 +702,13 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               "select",
               {
                 value: o,
-                onChange: (d) => g(d.target.value),
+                onChange: (l) => g(l.target.value),
                 className: "flex-1 bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent",
-                children: ue.map((d) => /* @__PURE__ */ t("option", { value: d, children: [
-                  d,
+                children: ue.map((l) => /* @__PURE__ */ t("option", { value: l, children: [
+                  l,
                   " ",
-                  d === (n == null ? void 0 : n.activeProfile) ? "(active)" : ""
-                ] }, d))
+                  l === (n == null ? void 0 : n.activeProfile) ? "(active)" : ""
+                ] }, l))
               }
             ) }),
             /* @__PURE__ */ t("p", { className: "text-[11px] text-muted mt-1", children: [
@@ -727,13 +727,13 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
               /* @__PURE__ */ t(
                 "select",
                 {
-                  value: Q.some((d) => d.id === c) ? c : "custom",
-                  onChange: (d) => {
-                    d.target.value !== "custom" && (x(d.target.value), b(""));
+                  value: Q.some((l) => l.id === c) ? c : "custom",
+                  onChange: (l) => {
+                    l.target.value !== "custom" && (x(l.target.value), b(""));
                   },
                   className: "bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent",
                   children: [
-                    Q.map((d) => /* @__PURE__ */ e("option", { value: d.id, children: d.label }, d.id)),
+                    Q.map((l) => /* @__PURE__ */ e("option", { value: l.id, children: l.label }, l.id)),
                     /* @__PURE__ */ e("option", { value: "custom", children: "Other / Custom Region…" })
                   ]
                 }
@@ -743,8 +743,8 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
                 {
                   type: "text",
                   placeholder: "e.g. ca-central-1",
-                  value: h || (Q.some((d) => d.id === c) ? "" : c),
-                  onChange: (d) => b(d.target.value),
+                  value: h || (Q.some((l) => l.id === c) ? "" : c),
+                  onChange: (l) => b(l.target.value),
                   className: "bg-surface-muted/60 border border-border rounded-lg px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
                 }
               )
@@ -756,7 +756,7 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
             /* @__PURE__ */ e(
               "button",
               {
-                onClick: l,
+                onClick: d,
                 disabled: p,
                 className: "px-3 py-2 rounded-lg border border-border text-xs font-medium hover:bg-surface-muted text-foreground transition-colors",
                 children: p ? "Refreshing…" : "↻ Test Connection & Ingest"
@@ -812,24 +812,24 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
         ] }),
         /* @__PURE__ */ e("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ e(O, { onClick: J, children: w ? "✓ Policy JSON Copied!" : "📋 Copy Policy JSON" }) })
       ] }),
-      /* @__PURE__ */ e("div", { className: "grid sm:grid-cols-4 gap-2 mt-4", children: (ee = s == null ? void 0 : s.policies) == null ? void 0 : ee.map((d) => /* @__PURE__ */ t(
+      /* @__PURE__ */ e("div", { className: "grid sm:grid-cols-4 gap-2 mt-4", children: (ee = s == null ? void 0 : s.policies) == null ? void 0 : ee.map((l) => /* @__PURE__ */ t(
         "button",
         {
-          onClick: () => P(d.id),
-          className: `p-3 rounded-xl border text-left transition-all ${N === d.id ? "border-accent bg-accent/10 shadow-sm" : "border-border bg-surface hover:border-border/80"}`,
+          onClick: () => P(l.id),
+          className: `p-3 rounded-xl border text-left transition-all ${N === l.id ? "border-accent bg-accent/10 shadow-sm" : "border-border bg-surface hover:border-border/80"}`,
           children: [
             /* @__PURE__ */ t("div", { className: "flex items-center justify-between mb-1", children: [
-              /* @__PURE__ */ e("span", { className: "text-[10px] font-bold uppercase tracking-wider text-muted", children: d.tier }),
-              d.recommended && /* @__PURE__ */ e("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400", children: "Recommended" })
+              /* @__PURE__ */ e("span", { className: "text-[10px] font-bold uppercase tracking-wider text-muted", children: l.tier }),
+              l.recommended && /* @__PURE__ */ e("span", { className: "text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400", children: "Recommended" })
             ] }),
-            /* @__PURE__ */ e("div", { className: "text-xs font-semibold text-foreground truncate", children: d.title }),
+            /* @__PURE__ */ e("div", { className: "text-xs font-semibold text-foreground truncate", children: l.title }),
             /* @__PURE__ */ t("div", { className: "text-[11px] text-muted mt-1", children: [
-              d.actionCount,
+              l.actionCount,
               " IAM Actions"
             ] })
           ]
         },
-        d.id
+        l.id
       )) }),
       C && /* @__PURE__ */ t("div", { className: "mt-4 p-4 rounded-xl bg-surface-muted/30 border border-border space-y-4", children: [
         /* @__PURE__ */ t("div", { children: [
@@ -847,10 +847,10 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
         ] }),
         /* @__PURE__ */ t("div", { children: [
           /* @__PURE__ */ e("div", { className: "text-[11px] uppercase font-bold text-muted mb-2", children: "Capabilities Unlocked:" }),
-          /* @__PURE__ */ e("div", { className: "flex flex-wrap gap-1.5", children: C.services.map((d) => /* @__PURE__ */ t("span", { className: "px-2 py-0.5 rounded-md bg-surface border border-border text-[11px] font-mono text-foreground/80", children: [
+          /* @__PURE__ */ e("div", { className: "flex flex-wrap gap-1.5", children: C.services.map((l) => /* @__PURE__ */ t("span", { className: "px-2 py-0.5 rounded-md bg-surface border border-border text-[11px] font-mono text-foreground/80", children: [
             "✓ ",
-            d
-          ] }, d)) })
+            l
+          ] }, l)) })
         ] }),
         /* @__PURE__ */ t("div", { className: "p-3 rounded-lg bg-surface border border-border text-xs space-y-2", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between", children: [
@@ -940,27 +940,27 @@ aws compute-optimizer update-enrollment-status --status Active --profile ${o}`;
         /* @__PURE__ */ e(
           "button",
           {
-            onClick: l,
+            onClick: d,
             disabled: p,
             className: "text-accent hover:underline text-xs font-medium",
             children: p ? "Probing…" : "↻ Re-run Health Probes"
           }
         )
       ] }),
-      /* @__PURE__ */ e("div", { className: "grid md:grid-cols-2 gap-3", children: (se = r == null ? void 0 : r.checks) == null ? void 0 : se.map((d) => /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "flex gap-3 items-start", children: [
-        /* @__PURE__ */ e("div", { className: `mt-0.5 text-sm ${d.ok ? "text-emerald-500 font-bold" : "text-amber-500 font-bold"}`, children: d.ok ? "✓" : "○" }),
+      /* @__PURE__ */ e("div", { className: "grid md:grid-cols-2 gap-3", children: (se = r == null ? void 0 : r.checks) == null ? void 0 : se.map((l) => /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "flex gap-3 items-start", children: [
+        /* @__PURE__ */ e("div", { className: `mt-0.5 text-sm ${l.ok ? "text-emerald-500 font-bold" : "text-amber-500 font-bold"}`, children: l.ok ? "✓" : "○" }),
         /* @__PURE__ */ t("div", { className: "flex-1 min-w-0", children: [
           /* @__PURE__ */ t("div", { className: "flex items-center justify-between gap-2", children: [
-            /* @__PURE__ */ e(k, { children: d.name }),
-            /* @__PURE__ */ e(S, { tone: d.ok ? "success" : "default", children: d.ok ? "Passing" : "Action Required" })
+            /* @__PURE__ */ e(k, { children: l.name }),
+            /* @__PURE__ */ e(S, { tone: l.ok ? "success" : "default", children: l.ok ? "Passing" : "Action Required" })
           ] }),
-          /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1 leading-relaxed", children: d.detail })
+          /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-1 leading-relaxed", children: l.detail })
         ] })
-      ] }) }, d.name)) })
+      ] }) }, l.name)) })
     ] })
   ] });
 }
-function Ue({ onAsk: r }) {
+function He({ onAsk: r }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ t(f, { children: [
     /* @__PURE__ */ e(k, { children: "Ask an evidence-backed question" }),
     /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2", children: "The FinOps Agent uses live, read-only AWS tools and deterministic arithmetic." }),
@@ -974,12 +974,12 @@ function Ue({ onAsk: r }) {
     ].map((s) => /* @__PURE__ */ e("button", { className: "text-left p-3 rounded-lg border border-border hover:border-accent text-sm transition-colors", onClick: () => r(s), children: s }, s)) })
   ] }) });
 }
-function qe({
+function Ue({
   config: r,
   onUpdate: n,
   onTriggerSweep: s,
   runningSweep: i,
-  sweepResult: l
+  sweepResult: d
 }) {
   var C, J;
   const [p, o] = m((r == null ? void 0 : r.enabled) || !1), [g, c] = m((r == null ? void 0 : r.frequency) || "daily"), [x, h] = m((r == null ? void 0 : r.thresholdDollars) || "10.00"), [b, N] = m((r == null ? void 0 : r.thresholdPercent) || "15.0"), [P, w] = m(!1), [T, H] = m(null), [A, M] = m(!1);
@@ -1124,15 +1124,15 @@ function qe({
             ] }),
             /* @__PURE__ */ e("p", { className: "text-xs text-foreground mt-1 leading-relaxed", children: r.lastSummary })
           ] }) : /* @__PURE__ */ e("p", { className: "text-xs text-muted leading-relaxed", children: "Run an immediate test sweep or enable recurring schedules to record telemetry checkpoints in SQLite." }),
-          l && /* @__PURE__ */ t("div", { className: "mt-3 pt-3 border-t border-border/80 text-xs space-y-1", children: [
+          d && /* @__PURE__ */ t("div", { className: "mt-3 pt-3 border-t border-border/80 text-xs space-y-1", children: [
             /* @__PURE__ */ t("div", { className: "font-semibold flex items-center gap-1.5 text-foreground", children: [
-              /* @__PURE__ */ e("span", { children: l.isAlert ? "⚠️" : "✓" }),
+              /* @__PURE__ */ e("span", { children: d.isAlert ? "⚠️" : "✓" }),
               /* @__PURE__ */ t("span", { children: [
                 "Test Sweep Result: ",
-                l.isAlert ? "Threshold Flagged" : "Clean Baseline"
+                d.isAlert ? "Threshold Flagged" : "Clean Baseline"
               ] })
             ] }),
-            /* @__PURE__ */ e("p", { className: "text-muted text-[11px] leading-relaxed", children: l.summary })
+            /* @__PURE__ */ e("p", { className: "text-muted text-[11px] leading-relaxed", children: d.summary })
           ] })
         ] }),
         /* @__PURE__ */ t("div", { className: "p-3.5 rounded-xl bg-surface-muted/60 border border-border space-y-2", children: [
@@ -1154,25 +1154,25 @@ function qe({
     ] })
   ] });
 }
-function Be({
+function qe({
   scheduleConfig: r,
   onUpdateSchedule: n,
   onTriggerSweep: s,
   runningSweep: i,
-  sweepResult: l,
+  sweepResult: d,
   demo: p,
   anomalies: o,
   onAsk: g
 }) {
   return /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ e(
-      qe,
+      Ue,
       {
         config: r,
         onUpdate: n,
         onTriggerSweep: s,
         runningSweep: i,
-        sweepResult: l
+        sweepResult: d
       }
     ),
     /* @__PURE__ */ t("div", { children: [
@@ -1210,7 +1210,7 @@ function Be({
     ] })
   ] });
 }
-function Ve({ items: r }) {
+function Be({ items: r }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ t(f, { children: [
     /* @__PURE__ */ e(k, { children: "Demo service breakdown" }),
     /* @__PURE__ */ e("div", { className: "mt-4 divide-y divide-border", children: r.map((n) => /* @__PURE__ */ t("div", { className: "py-3 grid grid-cols-3", children: [
@@ -1227,7 +1227,7 @@ function Ve({ items: r }) {
 }
 function oe({ title: r, text: n, action: s }) {
   return /* @__PURE__ */ e("div", { className: "px-6 py-6", children: /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "max-w-xl py-8 mx-auto text-center", children: [
-    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(le, { className: "w-8 h-8" }) }),
+    /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(de, { className: "w-8 h-8" }) }),
     /* @__PURE__ */ e("h2", { className: "text-lg font-semibold mt-3", children: r }),
     /* @__PURE__ */ e("p", { className: "text-sm text-muted mt-2 mb-4", children: n }),
     /* @__PURE__ */ e(O, { onClick: s, children: "Open FinOps Agent" })
@@ -1236,10 +1236,10 @@ function oe({ title: r, text: n, action: s }) {
 function Ne(r) {
   return r.split(/(\*\*.*?\*\*|`.*?`)/g).map((s, i) => s.startsWith("**") && s.endsWith("**") ? /* @__PURE__ */ e("strong", { className: "text-foreground font-semibold", children: s.slice(2, -2) }, i) : s.startsWith("`") && s.endsWith("`") ? /* @__PURE__ */ e("code", { className: "px-1 py-0.5 rounded bg-surface-muted text-accent font-mono text-[11px]", children: s.slice(1, -1) }, i) : s);
 }
-function Ge({ content: r }) {
+function Ve({ content: r }) {
   const n = r.split(`
 `), s = [];
-  let i = [], l = !1;
+  let i = [], d = !1;
   const p = (g, c) => {
     if (!g.length) return null;
     const x = g[0], h = g.slice(g.length > 1 && g[1].every((b) => b.trim().match(/^-+$/)) ? 2 : 1);
@@ -1248,12 +1248,12 @@ function Ge({ content: r }) {
       /* @__PURE__ */ e("tbody", { className: "divide-y divide-border font-mono text-[11px]", children: h.map((b, N) => /* @__PURE__ */ e("tr", { className: "hover:bg-surface-muted/30", children: b.map((P, w) => /* @__PURE__ */ e("td", { className: "px-3 py-1.5", children: P.trim() }, w)) }, N)) })
     ] }) }, `table-${c}`);
   }, o = () => {
-    l && i.length && (s.push(p(i, s.length)), i = [], l = !1);
+    d && i.length && (s.push(p(i, s.length)), i = [], d = !1);
   };
   return n.forEach((g, c) => {
     const x = g.trim();
     if (x.startsWith("|") && x.endsWith("|")) {
-      l = !0;
+      d = !0;
       const h = x.split("|").slice(1, -1);
       i.push(h);
       return;
@@ -1269,12 +1269,12 @@ function Ge({ content: r }) {
     ) : s.push(/* @__PURE__ */ e("div", { className: "h-2" }, `blank-${c}`));
   }), o(), /* @__PURE__ */ e("div", { className: "space-y-1", children: s });
 }
-function Je({
+function Ge({
   reports: r,
   selectedReport: n,
   onSelectReport: s,
   onGenerate: i,
-  generating: l,
+  generating: d,
   onAskAgent: p,
   onOpenSchedules: o
 }) {
@@ -1348,7 +1348,7 @@ function Je({
           n.createdAt
         ] })
       ] }),
-      /* @__PURE__ */ e("div", { className: "p-4 rounded-xl bg-surface-muted/30 border border-border", children: /* @__PURE__ */ e(Ge, { content: n.contentMarkdown }) })
+      /* @__PURE__ */ e("div", { className: "p-4 rounded-xl bg-surface-muted/30 border border-border", children: /* @__PURE__ */ e(Ve, { content: n.contentMarkdown }) })
     ] })
   ] }) : /* @__PURE__ */ t("div", { className: "px-6 py-6 space-y-6", children: [
     /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-surface-muted/50 border border-border", children: [
@@ -1357,14 +1357,14 @@ function Je({
         /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-0.5", children: "Durable, audit-ready reports compiled from live AWS billing telemetry and optimization pipelines." })
       ] }),
       /* @__PURE__ */ t("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ e(O, { onClick: () => i("executive"), disabled: !!l, children: l === "executive" ? "Generating Executive Report…" : "✦ Generate Executive Report" }),
+        /* @__PURE__ */ e(O, { onClick: () => i("executive"), disabled: !!d, children: d === "executive" ? "Generating Executive Report…" : "✦ Generate Executive Report" }),
         /* @__PURE__ */ e(
           "button",
           {
             onClick: () => i("backlog"),
-            disabled: !!l,
+            disabled: !!d,
             className: "px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-surface text-foreground transition-colors",
-            children: l === "backlog" ? "Generating Backlog…" : "↘ Generate Backlog Report"
+            children: d === "backlog" ? "Generating Backlog…" : "↘ Generate Backlog Report"
           }
         ),
         /* @__PURE__ */ e(
@@ -1424,7 +1424,7 @@ function Je({
           ] })
         ] }) }, h.id)),
         !r.length && /* @__PURE__ */ e(f, { children: /* @__PURE__ */ t("div", { className: "text-center py-8", children: [
-          /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(le, { className: "w-8 h-8" }) }),
+          /* @__PURE__ */ e("div", { className: "flex justify-center mb-2", children: /* @__PURE__ */ e(de, { className: "w-8 h-8" }) }),
           /* @__PURE__ */ e("h4", { className: "text-sm font-semibold text-foreground", children: "No Reports Generated Yet" }),
           /* @__PURE__ */ e("p", { className: "text-xs text-muted max-w-sm mx-auto mt-1 mb-4", children: "Generate your first monthly executive report or optimization backlog from live AWS billing telemetry." }),
           /* @__PURE__ */ e(O, { onClick: () => i("executive"), children: "Generate Executive Report Now" })
@@ -1434,5 +1434,5 @@ function Je({
   ] });
 }
 export {
-  Ke as default
+  _e as default
 };

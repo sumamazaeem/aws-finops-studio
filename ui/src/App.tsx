@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAppApi, useChatLauncher } from '@kirocrew/app-sdk'
-import { Badge, Btn, Card, CardTitle, EmptyState, ErrorNotice, PageHeader, Skeleton, StatCard } from '@kirocrew/app-sdk/ui'
+import { Badge, Btn, Card, CardTitle, EmptyState, PageHeader, Skeleton, StatCard } from '@kirocrew/app-sdk/ui'
 
 type Rec={id:string;what:string;why:string;service:string;resource:string;region:string;estimatedSaving:string;confidence:string;risk:string;status:string;evidence:Array<{source:string;metric:string;value:string}>;realizedSaving?:string}
 type LivePeriod={start:string;end:string;estimated:boolean;costBeforeCredits:string;credits:string;refunds:string;netCost:string;recordTypes:Record<string,string>}
@@ -418,7 +418,7 @@ export default function App(){
           </div>
         </div>
 
-        {error && <div className="px-6 mt-4"><ErrorNotice message={error}/></div>}
+        {error && <div className="px-6 mt-4"><div className="p-3 bg-red-500/10 border border-red-500/30 text-red-500 rounded-lg text-sm">{error}</div></div>}
         {content}
       </main>
     </div>
