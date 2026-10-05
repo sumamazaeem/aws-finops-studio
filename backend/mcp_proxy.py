@@ -38,8 +38,14 @@ class MCPProxy:
         env["AWS_PROFILE"] = self.active_scope["profile"] or "default"
         env["AWS_REGION"] = self.active_scope["region"] or "us-east-1"
         
+        import shutil
+        uvx_path = shutil.which("uvx")
+        if not uvx_path:
+            # Fallback for environments where ~/.local/bin is not in PATH
+            uvx_path = os.path.expanduser("~/.local/bin/uvx")
+            
         self.process = subprocess.Popen(
-            ["uvx", "awslabs.billing-cost-management-mcp-server@latest"],
+            [uvx_path, "awslabs.billing-cost-management-mcp-server@latest"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=sys.stderr,
