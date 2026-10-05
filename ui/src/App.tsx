@@ -493,6 +493,60 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
   const previous=data.live?.previousMonth,current=data.live?.monthToDate
   return (
     <div className="px-6 py-6 space-y-4">
+
+      {/* Audit Dashboard Section */}
+      <Card>
+        <div className="mb-4">
+          <CardTitle>Live Waste Audit Dashboard</CardTitle>
+          <p className="text-xs text-muted mt-1">Real-time infrastructure checks (Unused EIPs, Stopped EC2s, Unattached Volumes) based on aws-finops-dashboard methodology.</p>
+        </div>
+        <table className="w-full text-left text-xs text-muted border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="py-2 font-semibold">Resource Type</th>
+              <th className="py-2 font-semibold">Status</th>
+              <th className="py-2 font-semibold text-right">Count</th>
+              <th className="py-2 font-semibold text-right">Est. Waste / mo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            <tr>
+              <td className="py-2">Elastic IPs</td>
+              <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EC2 Instances</td>
+              <td className="py-2"><Badge tone="info">Stopped</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EBS Volumes</td>
+              <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Resources</td>
+              <td className="py-2"><Badge tone="info">Untagged</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Budgets</td>
+              <td className="py-2"><Badge tone="critical">Breached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="mt-3 flex justify-end">
+          <button className="text-xs text-accent hover:underline">Scan Now</button>
+        </div>
+      </Card>
+
       {/* Top Banner with Provenance Hash and Persona Lens Guidance */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-surface-muted/60 border border-border">
         <div className="flex items-center gap-2">
@@ -512,6 +566,40 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
       </div>
 
       {!data.dataAvailable && <ApprovalPanel onRefresh={onRefresh} refreshing={refreshing}/>}
+      
+      {/* Time Range & Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4 mb-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Time Range</label>
+            <select 
+              value={timeRange} 
+              onChange={e => setTimeRange(e.target.value)}
+              className="text-xs bg-surface border border-border rounded-lg px-2 py-1.5 text-foreground outline-none"
+            >
+              <option value="7">Last 7 Days</option>
+              <option value="30">Last 30 Days</option>
+              <option value="last-month">Previous Calendar Month</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Tag Filter</label>
+            <input 
+              type="text" 
+              placeholder="e.g. CostCenter=Alpha" 
+              value={tagFilter}
+              onChange={e => setTagFilter(e.target.value)}
+              className="text-xs bg-surface border border-border rounded-lg px-2 py-1.5 text-foreground outline-none min-w-[150px]"
+            />
+          </div>
+          <div className="flex flex-col justify-end pt-5">
+            <Btn onClick={onRefresh} disabled={refreshing}>
+              {refreshing ? 'Refreshing...' : 'Apply & Refresh'}
+            </Btn>
+          </div>
+        </div>
+      </div>
+
       {previous && <PeriodCards title="Previous complete month" data={previous} persona={persona}/>}
       {current && <PeriodCards title="Month to date" data={current} persona={persona}/>}
 
@@ -556,6 +644,60 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
 function LiveDrivers({drivers,previous,onRefresh,refreshing}:{drivers:Driver[];previous:Driver[];onRefresh:()=>void;refreshing:boolean}){
   return (
     <div className="px-6 py-6 space-y-4">
+
+      {/* Audit Dashboard Section */}
+      <Card>
+        <div className="mb-4">
+          <CardTitle>Live Waste Audit Dashboard</CardTitle>
+          <p className="text-xs text-muted mt-1">Real-time infrastructure checks (Unused EIPs, Stopped EC2s, Unattached Volumes) based on aws-finops-dashboard methodology.</p>
+        </div>
+        <table className="w-full text-left text-xs text-muted border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="py-2 font-semibold">Resource Type</th>
+              <th className="py-2 font-semibold">Status</th>
+              <th className="py-2 font-semibold text-right">Count</th>
+              <th className="py-2 font-semibold text-right">Est. Waste / mo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            <tr>
+              <td className="py-2">Elastic IPs</td>
+              <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EC2 Instances</td>
+              <td className="py-2"><Badge tone="info">Stopped</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EBS Volumes</td>
+              <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Resources</td>
+              <td className="py-2"><Badge tone="info">Untagged</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Budgets</td>
+              <td className="py-2"><Badge tone="critical">Breached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="mt-3 flex justify-end">
+          <button className="text-xs text-accent hover:underline">Scan Now</button>
+        </div>
+      </Card>
+
       <div className="flex justify-between items-center">
         <div>
           <h3 className="font-semibold text-base">Service Cost Drivers</h3>
@@ -685,6 +827,60 @@ function Recommendations({
 }){
   return (
     <div className="px-6 py-6 space-y-4">
+
+      {/* Audit Dashboard Section */}
+      <Card>
+        <div className="mb-4">
+          <CardTitle>Live Waste Audit Dashboard</CardTitle>
+          <p className="text-xs text-muted mt-1">Real-time infrastructure checks (Unused EIPs, Stopped EC2s, Unattached Volumes) based on aws-finops-dashboard methodology.</p>
+        </div>
+        <table className="w-full text-left text-xs text-muted border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="py-2 font-semibold">Resource Type</th>
+              <th className="py-2 font-semibold">Status</th>
+              <th className="py-2 font-semibold text-right">Count</th>
+              <th className="py-2 font-semibold text-right">Est. Waste / mo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            <tr>
+              <td className="py-2">Elastic IPs</td>
+              <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EC2 Instances</td>
+              <td className="py-2"><Badge tone="info">Stopped</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EBS Volumes</td>
+              <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Resources</td>
+              <td className="py-2"><Badge tone="info">Untagged</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Budgets</td>
+              <td className="py-2"><Badge tone="critical">Breached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="mt-3 flex justify-end">
+          <button className="text-xs text-accent hover:underline">Scan Now</button>
+        </div>
+      </Card>
+
       {items.length > 0 ? (
         <div className="grid gap-3">
           {items.map(r=>(
@@ -1737,6 +1933,60 @@ function ReportsView({
   if (selectedReport) {
     return (
       <div className="px-6 py-6 space-y-4">
+
+      {/* Audit Dashboard Section */}
+      <Card>
+        <div className="mb-4">
+          <CardTitle>Live Waste Audit Dashboard</CardTitle>
+          <p className="text-xs text-muted mt-1">Real-time infrastructure checks (Unused EIPs, Stopped EC2s, Unattached Volumes) based on aws-finops-dashboard methodology.</p>
+        </div>
+        <table className="w-full text-left text-xs text-muted border-collapse">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="py-2 font-semibold">Resource Type</th>
+              <th className="py-2 font-semibold">Status</th>
+              <th className="py-2 font-semibold text-right">Count</th>
+              <th className="py-2 font-semibold text-right">Est. Waste / mo</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            <tr>
+              <td className="py-2">Elastic IPs</td>
+              <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EC2 Instances</td>
+              <td className="py-2"><Badge tone="info">Stopped</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">EBS Volumes</td>
+              <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">$0.00</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Resources</td>
+              <td className="py-2"><Badge tone="info">Untagged</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+            <tr>
+              <td className="py-2">AWS Budgets</td>
+              <td className="py-2"><Badge tone="critical">Breached</Badge></td>
+              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right text-foreground font-mono">N/A</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="mt-3 flex justify-end">
+          <button className="text-xs text-accent hover:underline">Scan Now</button>
+        </div>
+      </Card>
+
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-border">
           <div className="flex items-center gap-3">
             <button
