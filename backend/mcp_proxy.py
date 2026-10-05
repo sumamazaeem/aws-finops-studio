@@ -6,18 +6,23 @@ import threading
 import os
 import queue
 
+from pathlib import Path
+
 def get_active_scope():
     try:
-        conn = sqlite3.connect('db.sqlite3')
+        data_dir = Path(os.environ.get("KIROCREW_APP_DATA_DIR", Path(__file__).parent.parent / "data")).resolve()
+        db_path = data_dir / "finops.sqlite3"
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
         c.execute("SELECT profile, region FROM scope LIMIT 1")
         row = c.fetchone()
         conn.close()
         if row:
             return {"profile": row[0], "region": row[1]}
-    except Exception:
+    except Exception as e:
         pass
     return {"profile": "default", "region": "us-east-1"}
+
 
 class MCPProxy:
     def __init__(self):
