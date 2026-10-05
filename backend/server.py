@@ -86,7 +86,7 @@ def _record_type_period(result):
     credits=groups.get("Credit",Decimal("0")); refunds=groups.get("Refund",Decimal("0")); cost_before_adjustments=sum((v for k,v in groups.items() if k not in {"Credit","Refund"}),Decimal("0")); net=sum(groups.values(),Decimal("0"))
     return {"start":result["TimePeriod"]["Start"],"end":result["TimePeriod"]["End"],"estimated":bool(result.get("Estimated")),"costBeforeCredits":str(cost_before_adjustments),"credits":str(credits),"refunds":str(refunds),"netCost":str(net),"recordTypes":{k:str(v) for k,v in sorted(groups.items())}}
 
-def _run_cost_query(start,end,group_key,exclude_adjustments=False,profile=None,region=None):
+def _run_cost_query(start,end,group_key,exclude_adjustments=False,profile=None,region=None,tag_filter=None):
     if profile is None or region is None:
         try:
             scope = get_active_scope()
@@ -99,7 +99,21 @@ def _run_cost_query(start,end,group_key,exclude_adjustments=False,profile=None,r
     if not aws: raise RuntimeError("AWS CLI is unavailable to the app backend")
     env={**os.environ,"AWS_PROFILE":profile,"AWS_REGION":region}
     command=[aws,"ce","get-cost-and-usage","--profile",profile,"--region",region,"--time-period",f"Start={start.isoformat()},End={end.isoformat()}","--granularity","MONTHLY","--metrics","UnblendedCost","--group-by",f"Type=DIMENSION,Key={group_key}","--output","json"]
-    if exclude_adjustments: command.extend(["--filter",json.dumps({"Not":{"Dimensions":{"Key":"RECORD_TYPE","Values":["Credit","Refund"]}}})])
+    
+    filters = []
+    if exclude_adjustments:
+        filters.append({"Not":{"Dimensions":{"Key":"RECORD_TYPE","Values":["Credit","Refund"]}}})
+    if tag_filter:
+        parts = tag_filter.split('=')
+        if len(parts) == 2:
+            filters.append({"Tags": {"Key": parts[0].strip(), "Values": [parts[1].strip()]}})
+            
+    if filters:
+        if len(filters) > 1:
+            command.extend(["--filter",json.dumps({"And": filters})])
+        else:
+            command.extend(["--filter",json.dumps(filters[0])])
+            
     completed=subprocess.run(command,capture_output=True,text=True,timeout=45,env=env,check=False)
     if completed.returncode: raise RuntimeError((completed.stderr or "Cost Explorer request failed").strip()[:500])
     return json.loads(completed.stdout).get("ResultsByTime",[])
@@ -332,15 +346,29 @@ def get_policy_templates():
             p["actionCount"] = 0
     return policies
 
-def refresh_live_cost_overview():
+def refresh_live_cost_overview(time_range="30", tag_filter=None):
     now=time.time()
-    today=date.today(); current_start=_month_start(today); previous_start=_previous_month_start(today); end=today+timedelta(days=1)
+    today=date.today()
+    if str(time_range) == "7":
+        previous_start = today - timedelta(days=14)
+        current_start = today - timedelta(days=7)
+    elif str(time_range) == "last-month":
+        current_start = _previous_month_start(today)
+        previous_start = _previous_month_start(current_start)
+        today = _month_start(today) - timedelta(days=1) # end of last month
+    else: # default 30
+        previous_start = today - timedelta(days=60)
+        current_start = today - timedelta(days=30)
+        
+    end=today+timedelta(days=1)
+    
     scope=get_active_scope()
     profile=scope["profile"]
     region=scope["region"]
     identity=_get_caller_identity(profile, region)
-    raw_records=_run_cost_query(previous_start,end,"RECORD_TYPE",profile=profile,region=region)
-    raw_services=_run_cost_query(previous_start,end,"SERVICE",exclude_adjustments=True,profile=profile,region=region)
+    raw_records=_run_cost_query(previous_start,end,"RECORD_TYPE",profile=profile,region=region,tag_filter=tag_filter)
+    raw_services=_run_cost_query(previous_start,end,"SERVICE",exclude_adjustments=True,profile=profile,region=region,tag_filter=tag_filter)
+
     
     # Hash raw query payload for immutable provenance
     raw_bytes=json.dumps({"records":raw_records,"services":raw_services,"profile":profile,"region":region},sort_keys=True).encode()
@@ -725,8 +753,8 @@ def get_schedule_config():
     scope = get_active_scope()
     profile = scope["profile"]
     cfg["cliCommands"] = {
-        "daily": f'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse for profile {profile}. Check for service cost spikes >${cfg["thresholdDollars"]} or >{cfg["thresholdPercent"]}%. Keep report concise and evidence-backed."',
-        "weekly": f'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest and optimization backlog audit for profile {profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities."'
+        "daily": f'kirocrew cron add "aws-finops-daily" "Run daily AWS cost and anomaly pulse for profile {profile}. Check for service cost spikes >${cfg["thresholdDollars"]} or >{cfg["thresholdPercent"]}%. Keep report concise and evidence-backed." --cron "0 8 * * *" --agent finops-agent',
+        "weekly": f'kirocrew cron add "aws-finops-weekly" "Run weekly executive FinOps digest and optimization backlog audit for profile {profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities." --cron "0 9 * * 1" --agent finops-agent'
     }
     return cfg
 
@@ -1088,8 +1116,12 @@ class Handler(BaseHTTPRequestHandler):
         if not self.auth("POST",body): return
         route=urlparse(self.path).path.removeprefix("/api")
         if route=="/refresh-live":
-            try: refresh_live_cost_overview(); self.reply(200,overview("live"))
-            except (OSError,subprocess.SubprocessError,ValueError,json.JSONDecodeError,RuntimeError) as exc: self.reply(502,{"error":str(exc)})
+            try:
+                data = json.loads(body) if body else {}
+                refresh_live_cost_overview(data.get("timeRange", "30"), data.get("tagFilter", ""))
+                self.reply(200,overview("live"))
+            except (OSError,subprocess.SubprocessError,ValueError,json.JSONDecodeError,RuntimeError) as exc:
+                self.reply(502,{"error":str(exc)})
             return
         elif route=="/profiles":
             try:

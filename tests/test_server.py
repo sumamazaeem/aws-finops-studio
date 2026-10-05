@@ -75,7 +75,7 @@ def test_reports_persist_and_generate(monkeypatch,tmp_path):
     # Generate backlog report (live zero findings)
     backlog=server.generate_report("backlog")
     assert backlog["type"]=="backlog"
-    assert "Optimization Audit Findings & Diagnostics" in backlog["contentMarkdown"]
+    assert "FinOps Optimization Backlog Report" in backlog["contentMarkdown"]
     all_reps=server.list_reports()
     assert len(all_reps)>=2
     assert all_reps[0]["id"]==backlog["id"]

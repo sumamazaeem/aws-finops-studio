@@ -20,13 +20,9 @@
   ],
   "mcpServers": {
     "aws-finops-readonly": {
-      "command": "uvx",
-      "args": ["awslabs.billing-cost-management-mcp-server@latest"],
-      "env": {
-        "AWS_PROFILE": "default",
-        "AWS_REGION": "us-east-1",
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      }
+      "command": "python3",
+      "args": ["backend/mcp_proxy.py"],
+      "env": {}
     }
   },
   "backend": {"entryPoint": "backend/server.py", "type": "python", "port": "auto", "healthCheck": "/health", "routes": "/api/apps/aws-finops-studio"},
@@ -43,7 +39,8 @@
       "/apps/aws-finops-studio/api/calculate",
       "/apps/aws-finops-studio/api/profiles",
       "/apps/aws-finops-studio/api/policies",
-      "/apps/aws-finops-studio/api/schedules"
+      "/apps/aws-finops-studio/api/schedules",
+      "/api/crons"
     ],
     "events": [], "storage": true, "cron": true, "memory": "app-scoped", "network": false,
     "sessionApproval": false, "spawn": false, "jobs": false

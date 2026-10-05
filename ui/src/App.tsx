@@ -96,6 +96,10 @@ function FinOpsCubeIcon({ className = "w-6 h-6" }: { className?: string }) {
 
 export default function App(){
   const api=useAppApi(); const {openChat}=useChatLauncher(); const [tab,setTab]=useState('Overview'); const [demo,setDemo]=useState(()=>{try{return localStorage.getItem('aws-finops-studio:demo')==='true'}catch{return false}}); const [persona,setPersona]=useState<Persona>('Practitioner'); const [overview,setOverview]=useState<Overview|null>(null); const [recs,setRecs]=useState<Rec[]>([]); const [evidenceRuns,setEvidenceRuns]=useState<EvidenceRun[]>([]); const [diag,setDiag]=useState<any>(null); const [error,setError]=useState(''); const [refreshing,setRefreshing]=useState(false);
+  const [timeRange, setTimeRange] = useState('30');
+  const [tagFilter, setTagFilter] = useState('');
+  const [slackWebhook, setSlackWebhook] = useState('');
+  const [s3Bucket, setS3Bucket] = useState('');
   const [reports,setReports]=useState<any[]>([]); const [selectedReport,setSelectedReport]=useState<any|null>(null); const [generatingReport,setGeneratingReport]=useState<string|null>(null)
   const [profilesData,setProfilesData]=useState<ProfilesData|null>(null)
   const [policiesData,setPoliciesData]=useState<{activeProfile:string;activeRegion:string;policies:PolicyTemplate[]}|null>(null)
@@ -124,6 +128,30 @@ export default function App(){
     try{
       const res:any=await api.post('/apps/aws-finops-studio/api/schedules',updates);
       if(res?.schedule) setScheduleConfig(res.schedule);
+
+      const cfg = res?.schedule || { ...scheduleConfig, ...updates };
+      const profile = profilesData?.activeProfile || 'default';
+      const freq = cfg.frequency || 'daily';
+
+      const existing: any = await api.get('/api/crons');
+      const jobsArray = existing?.jobs ? existing.jobs : (Array.isArray(existing) ? existing : []);
+      const finopsJobs = jobsArray.filter((j: any) => j.name === 'aws-finops-daily' || j.name === 'aws-finops-weekly');
+      for (const job of finopsJobs) {
+        if (job.id) await api.delete(`/api/crons/${job.id}`);
+      }
+
+      if (cfg.enabled) {
+        const msg = freq === 'daily'
+          ? `Run daily AWS cost and anomaly pulse for profile ${profile}. Check for service cost spikes >$${cfg.thresholdDollars} or >${cfg.thresholdPercent}%. Keep report concise and evidence-backed.`
+          : `Run weekly executive FinOps digest and optimization backlog audit for profile ${profile}. Summarize MTD spend, top service deltas, and rightsizing opportunities.`;
+        
+        await api.post('/api/crons', {
+          name: freq === 'daily' ? 'aws-finops-daily' : 'aws-finops-weekly',
+          message: msg,
+          cron: freq === 'daily' ? "0 8 * * *" : "0 9 * * 1",
+          agent: "finops-agent"
+        });
+      }
     }catch(e:any){
       setError(e.message||'Failed to update schedule');
     }
@@ -196,7 +224,7 @@ export default function App(){
     if(!overview) return <div className="p-6 grid gap-4 grid-cols-3"><Skeleton/><Skeleton/><Skeleton/></div>
     if(tab==='Overview') {
       return overview.mode==='live'
-        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing}/>
+        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing} timeRange={timeRange} setTimeRange={setTimeRange} tagFilter={tagFilter} setTagFilter={setTagFilter}/>
         : <OverviewPage data={overview} persona={persona} onAsk={()=>ask('Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.')}/>
     }
     if(tab==='Optimization'||tab==='Resources') return (
@@ -461,7 +489,7 @@ function ApprovalPanel({onRefresh,refreshing}:{onRefresh:()=>void;refreshing:boo
   )
 }
 
-function LiveOverview({data,persona,onAsk,onRefresh,refreshing}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean}){
+function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTimeRange,tagFilter,setTagFilter}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean,timeRange:string,setTimeRange:any,tagFilter:string,setTagFilter:any}){
   const previous=data.live?.previousMonth,current=data.live?.monthToDate
   return (
     <div className="px-6 py-6 space-y-4">
@@ -1270,8 +1298,8 @@ function ScheduleManager({
   }
 
   const activeCliCommand = frequency === 'daily'
-    ? config?.cliCommands?.daily || 'kirocrew cron add aws-finops-daily "0 8 * * *" --agent finops-agent --message "Run daily AWS cost and anomaly pulse."'
-    : config?.cliCommands?.weekly || 'kirocrew cron add aws-finops-weekly "0 9 * * 1" --agent finops-agent --message "Run weekly executive FinOps digest."'
+    ? config?.cliCommands?.daily || 'kirocrew cron add "aws-finops-daily" "Run daily AWS cost and anomaly pulse." --cron "0 8 * * *" --agent finops-agent'
+    : config?.cliCommands?.weekly || 'kirocrew cron add "aws-finops-weekly" "Run weekly executive FinOps digest." --cron "0 9 * * 1" --agent finops-agent'
 
   const copyCliCommand = () => {
     navigator.clipboard?.writeText(activeCliCommand)
@@ -1448,7 +1476,7 @@ function ScheduleManager({
               </button>
             </div>
             <p className="text-[11px] text-muted leading-relaxed">
-              Prefer managing background jobs via CLI? Copy and run this command in your terminal:
+              This schedule is automatically synchronized with your Kiro Crew background jobs. You can also deploy it via CLI if you prefer:
             </p>
             <pre className="p-2.5 rounded-lg bg-surface border border-border text-[11px] font-mono text-foreground overflow-x-auto whitespace-pre-wrap select-all">
               {activeCliCommand}
@@ -1722,6 +1750,43 @@ function ReportsView({
             </Badge>
           </div>
           <div className="flex items-center gap-2">
+            
+            <button
+              onClick={() => {
+                const blob = new Blob([selectedReport.contentMarkdown], {type: 'text/markdown'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${selectedReport.id}.md`;
+                a.click();
+              }}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              ↓ Download MD
+            </button>
+            <button
+              onClick={() => {
+                // Generate a naive CSV representation of the report
+                const lines = selectedReport.contentMarkdown.split('\n');
+                const csv = lines.map((l: string) => `"${l.replace(/"/g, '""')}"`).join('\n');
+                const blob = new Blob([csv], {type: 'text/csv'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${selectedReport.id}.csv`;
+                a.click();
+              }}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              ↓ CSV
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="text-xs text-muted hover:text-foreground flex items-center gap-1 font-medium px-2.5 py-1.5 rounded-lg border border-border bg-surface"
+            >
+              🖨️ PDF / Print
+            </button>
+
             <Btn onClick={() => copyMarkdown(selectedReport.contentMarkdown)}>
               {copied ? '✓ Copied' : 'Copy Report Markdown'}
             </Btn>
