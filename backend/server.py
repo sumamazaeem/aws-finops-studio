@@ -1091,7 +1091,7 @@ class Handler(BaseHTTPRequestHandler):
         parsed=urlparse(self.path); route=parsed.path.removeprefix("/api") or "/"; requested=parse_qs(parsed.query).get("mode",["live"])[0]; mode="demo" if requested=="demo" else "live"
         routes={
             "/health":lambda:{"status":"ok","app":APP_NAME},
-            "/status":lambda:{"app":APP_NAME,"version":"0.1.0","readOnly":True,"mode":mode},
+            "/status":lambda:{"app":APP_NAME,"version":"0.1.1","readOnly":True,"mode":mode},
             "/overview":lambda:overview(mode),
             "/recommendations":lambda:{"mode":mode,"items":fetch_live_recommendations() if mode=="live" else recommendations(mode)},
             "/evidence":lambda:{"runs":list_evidence_runs()},
@@ -1178,4 +1178,3 @@ class Handler(BaseHTTPRequestHandler):
 
 class Server(ThreadingHTTPServer): allow_reuse_address=not sys.platform.startswith("win")
 if __name__=="__main__": init_db(); Server(("127.0.0.1",PORT),Handler).serve_forever()
-

@@ -1,6 +1,6 @@
 {
   "name": "aws-finops-studio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "AWS FinOps Studio",
   "description": "Read-only AWS cost intelligence, optimization tracking, and evidence-backed FinOps reporting.",
   "author": "AWS FinOps Studio",

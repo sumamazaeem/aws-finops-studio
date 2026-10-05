@@ -291,7 +291,7 @@ export default function App(){
               </div>
               <div>
                 <div className="leading-tight">AWS FinOps Studio</div>
-                <div className="text-[10px] text-muted uppercase tracking-wider font-mono">v0.1.0 · Read-Only</div>
+                <div className="text-[10px] text-muted uppercase tracking-wider font-mono">v0.1.1 · Read-Only</div>
               </div>
             </div>
             <p className="text-xs text-muted mt-2">Deterministic financial engineering & evidence</p>
@@ -2159,5 +2159,4 @@ function ReportsView({
     </div>
   )
 }
-
 

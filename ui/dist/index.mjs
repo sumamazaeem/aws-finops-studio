@@ -169,7 +169,7 @@ function _e() {
             /* @__PURE__ */ e("div", { className: "p-1.5 rounded-xl bg-surface border border-border shadow-sm flex items-center justify-center shrink-0", children: /* @__PURE__ */ e(de, { className: "w-5 h-5" }) }),
             /* @__PURE__ */ t("div", { children: [
               /* @__PURE__ */ e("div", { className: "leading-tight", children: "AWS FinOps Studio" }),
-              /* @__PURE__ */ e("div", { className: "text-[10px] text-muted uppercase tracking-wider font-mono", children: "v0.1.0 · Read-Only" })
+              /* @__PURE__ */ e("div", { className: "text-[10px] text-muted uppercase tracking-wider font-mono", children: "v0.1.1 · Read-Only" })
             ] })
           ] }),
           /* @__PURE__ */ e("p", { className: "text-xs text-muted mt-2", children: "Deterministic financial engineering & evidence" })
