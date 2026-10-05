@@ -168,4 +168,15 @@ def test_schedule_config_and_anomaly_sweep(monkeypatch,tmp_path):
     assert sweep_alert["flaggedCount"] == 1
     assert sweep_alert["flaggedServices"][0]["service"] == "RDS"
 
+def test_dashboard_snapshot_degrades_per_service(monkeypatch,tmp_path):
+    server=load_server(monkeypatch,tmp_path)
+    monkeypatch.setattr(server,"_get_caller_identity",lambda *a,**k:{"verified":True,"account":"123456789012","accountMasked":"***9012","profile":"default","region":"us-east-1"})
+    monkeypatch.setattr(server,"list_regions",lambda *a,**k:["us-east-1","eu-west-1"])
+    monkeypatch.setattr(server,"load_budgets",lambda *a,**k:[{"name":"Monthly","limit":"100","actual":"50","percentUsed":50.0,"breached":False}])
+    monkeypatch.setattr(server,"load_trend",lambda *a,**k:[{"start":"2026-10-01","end":"2026-11-01","cost":"50","unit":"USD","estimated":True}])
+    result=server.dashboard_snapshot(regions=["eu-west-1"],tags="Team=Platform")
+    assert result["selectedRegions"]==["eu-west-1"]
+    assert result["tags"]==[{"key":"Team","value":"Platform"}]
+    assert result["budgets"][0]["name"]=="Monthly"
+    assert result["trend"][0]["cost"]=="50"
 

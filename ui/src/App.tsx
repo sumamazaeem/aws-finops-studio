@@ -39,6 +39,13 @@ type ScheduleConfig={
     weekly:string;
   };
 }
+type DashboardData={
+  profile:string; identity?:CallerIdentity; availableRegions:string[]; selectedRegions:string[];
+  tags:Array<{key:string;value:string}>; budgets:Array<{name:string;limit:string;actual:string;forecast?:string|null;percentUsed:number;breached:boolean}>;
+  trend:Array<{start:string;end:string;cost:string;unit:string;estimated:boolean}>;
+  audit?:{ec2Summary:Record<string,number>;stoppedInstances:any[];unusedVolumes:any[];unusedEips:any[];untaggedResources:any[];counts:Record<string,number>;errors:any[]}|null;
+  errors:Array<{service:string;message:string}>;
+}
 type Overview={
   mode:'live'|'demo';
   dataAvailable:boolean;
@@ -79,7 +86,7 @@ const personas: Array<{id: Persona; label: string; icon: string; desc: string}> 
   {id: 'Leadership', label: 'Leadership', icon: '📊', desc: 'Executive cost trajectory, realized savings, and active optimization pipeline'}
 ]
 
-const tabs=[['Overview','◫'],['Cost Explorer','▥'],['Optimization','↘'],['Anomalies','△'],['Resources','▤'],['Commitments','◇'],['Well-Architected','✓'],['Ask FinOps','✦'],['Reports','▧'],['History','◷'],['Connection','⚙']] as const
+const tabs=[['Overview','◫'],['Portfolio','◎'],['Cost Explorer','▥'],['Optimization','↘'],['Anomalies','△'],['Resources','▤'],['Commitments','◇'],['Well-Architected','✓'],['Ask FinOps','✦'],['Reports','▧'],['History','◷'],['Connection','⚙']] as const
 const usd=(n:number|string)=>new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0}).format(Number(n))
 const usd2=(n:number|string)=>{const value=Number(n);return new Intl.NumberFormat(undefined,{style:'currency',currency:'USD',minimumFractionDigits:2,maximumFractionDigits:2}).format(Math.abs(value)<0.005?0:value)}
 const tone=(value:string)=>value==='high'?'success':value==='medium'?'warning':'default'
@@ -96,10 +103,9 @@ function FinOpsCubeIcon({ className = "w-6 h-6" }: { className?: string }) {
 
 export default function App(){
   const api=useAppApi(); const {openChat}=useChatLauncher(); const [tab,setTab]=useState('Overview'); const [demo,setDemo]=useState(()=>{try{return localStorage.getItem('aws-finops-studio:demo')==='true'}catch{return false}}); const [persona,setPersona]=useState<Persona>('Practitioner'); const [overview,setOverview]=useState<Overview|null>(null); const [recs,setRecs]=useState<Rec[]>([]); const [evidenceRuns,setEvidenceRuns]=useState<EvidenceRun[]>([]); const [diag,setDiag]=useState<any>(null); const [error,setError]=useState(''); const [refreshing,setRefreshing]=useState(false);
-  const [timeRange, setTimeRange] = useState('30');
-  const [tagFilter, setTagFilter] = useState('');
-  const [slackWebhook, setSlackWebhook] = useState('');
-  const [s3Bucket, setS3Bucket] = useState('');
+  const [timeRange, setTimeRange] = useState(()=>localStorage.getItem('aws-finops-studio:timeRange')||'30');
+  const [tagFilter, setTagFilter] = useState(()=>localStorage.getItem('aws-finops-studio:tagFilter')||'');
+  const [dashboard,setDashboard]=useState<DashboardData|null>(null); const [scanning,setScanning]=useState(false)
   const [reports,setReports]=useState<any[]>([]); const [selectedReport,setSelectedReport]=useState<any|null>(null); const [generatingReport,setGeneratingReport]=useState<string|null>(null)
   const [profilesData,setProfilesData]=useState<ProfilesData|null>(null)
   const [policiesData,setPoliciesData]=useState<{activeProfile:string;activeRegion:string;policies:PolicyTemplate[]}|null>(null)
@@ -117,10 +123,11 @@ export default function App(){
       api.get(`${base}/diagnostics`),
       api.get(`${base}/profiles`),
       api.get(`${base}/policies`),
-      api.get(`${base}/schedules`)
-    ]).then(([o,r,e,rep,d,profs,pols,sched]:any[])=>{
+      api.get(`${base}/schedules`),
+      api.get(`${base}/dashboard?tags=${encodeURIComponent(tagFilter)}`)
+    ]).then(([o,r,e,rep,d,profs,pols,sched,dash]:any[])=>{
       setOverview(o); setRecs(r.items); setEvidenceRuns(e?.runs||[]); setReports(rep?.items||[]); setDiag(d)
-      setProfilesData(profs); setPoliciesData(pols); setScheduleConfig(sched)
+      setProfilesData(profs); setPoliciesData(pols); setScheduleConfig(sched); setDashboard(dash)
     }).catch((e:any)=>setError(e.message||'Unable to load FinOps data'))
   }
 
@@ -176,13 +183,15 @@ export default function App(){
     try{localStorage.setItem('aws-finops-studio:demo',String(demo))}catch{}
     loadData()
   },[demo])
+  useEffect(()=>{try{localStorage.setItem('aws-finops-studio:timeRange',timeRange);localStorage.setItem('aws-finops-studio:tagFilter',tagFilter)}catch{}},[timeRange,tagFilter])
 
   const ask=(message:string)=>openChat({agent:'finops-agent',message,autoSend:true})
   const refreshLive=async()=>{
     setRefreshing(true); setError('');
     try{
-      const next:any=await api.post('/apps/aws-finops-studio/api/refresh-live',{});
+      const next:any=await api.post('/apps/aws-finops-studio/api/refresh-live',{timeRange,tagFilter});
       setOverview(next);
+      const dash:any=await api.get(`/apps/aws-finops-studio/api/dashboard?tags=${encodeURIComponent(tagFilter)}`); setDashboard(dash)
       const ev:any=await api.get('/apps/aws-finops-studio/api/evidence');
       setEvidenceRuns(ev?.runs||[])
       const d:any=await api.get('/apps/aws-finops-studio/api/diagnostics');
@@ -192,6 +201,15 @@ export default function App(){
     }finally{
       setRefreshing(false)
     }
+  }
+
+  const scanResources=async(regions?:string[])=>{
+    setScanning(true); setError('')
+    try{
+      const selected=regions?.length?regions:(dashboard?.selectedRegions||[profilesData?.activeRegion||'us-east-1'])
+      const result:any=await api.post('/apps/aws-finops-studio/api/audit',{profile:profilesData?.activeProfile,regions:selected})
+      setDashboard(prev=>prev?{...prev,audit:result,selectedRegions:selected}:prev)
+    }catch(e:any){setError(e.message||'Resource audit failed')}finally{setScanning(false)}
   }
 
   const switchProfile=async(profile:string,region:string)=>{
@@ -224,10 +242,12 @@ export default function App(){
     if(!overview) return <div className="p-6 grid gap-4 grid-cols-3"><Skeleton/><Skeleton/><Skeleton/></div>
     if(tab==='Overview') {
       return overview.mode==='live'
-        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing} timeRange={timeRange} setTimeRange={setTimeRange} tagFilter={tagFilter} setTagFilter={setTagFilter}/>
+        ? <LiveOverview data={overview} persona={persona} onAsk={ask} onRefresh={refreshLive} refreshing={refreshing} timeRange={timeRange} setTimeRange={setTimeRange} tagFilter={tagFilter} setTagFilter={setTagFilter} dashboard={dashboard} onScan={scanResources} scanning={scanning}/>
         : <OverviewPage data={overview} persona={persona} onAsk={()=>ask('Explain the current AWS FinOps overview. Separate observed facts, inferences, and recommendations, and use deterministic calculations.')}/>
     }
-    if(tab==='Optimization'||tab==='Resources') return (
+    if(tab==='Portfolio') return <PortfolioView profiles={profilesData?.profiles||[]} timeRange={timeRange} tags={tagFilter}/>
+    if(tab==='Resources') return <ResourcesView data={dashboard} onScan={scanResources} scanning={scanning}/>
+    if(tab==='Optimization') return (
       <Recommendations
         items={recs}
         title={tab}
@@ -235,6 +255,7 @@ export default function App(){
         onSwitchToDemo={()=>setDemo(true)}
         onRefresh={refreshLive}
         refreshing={refreshing}
+        dashboard={dashboard}
       />
     )
     if(tab==='History') return <EvidenceAudit runs={evidenceRuns} recommendations={recs} onRefresh={loadData}/>
@@ -261,7 +282,7 @@ export default function App(){
         onAsk={ask}
       />
     )
-    if(tab==='Cost Explorer') return overview.mode==='demo'?<Drivers items={overview.drivers}/>:overview.dataAvailable?<LiveDrivers drivers={overview.drivers} previous={overview.previousDrivers||[]} onRefresh={refreshLive} refreshing={refreshing}/>:<ApprovalPanel onRefresh={refreshLive} refreshing={refreshing}/>
+    if(tab==='Cost Explorer') return overview.mode==='demo'?<Drivers items={overview.drivers}/>:overview.dataAvailable?<><LiveDrivers drivers={overview.drivers} previous={overview.previousDrivers||[]} onRefresh={refreshLive} refreshing={refreshing} dashboard={dashboard}/><TrendPanel data={dashboard?.trend||[]}/></>:<ApprovalPanel onRefresh={refreshLive} refreshing={refreshing}/>
     if(tab==='Commitments') return <Setup title="Commitment intelligence" text="Connect AWS to load Savings Plans and Reserved Instance coverage, utilization, and purchase recommendations. Purchases are never executed." action={()=>ask('Analyze Savings Plans and Reserved Instance coverage and utilization. Read-only; do not purchase anything.')}/>
     if(tab==='Well-Architected') return <Setup title="Cost Optimization review" text="Run an evidence-backed Cost Optimization pillar review using current AWS Well-Architected guidance." action={()=>ask('Run a read-only AWS Well-Architected Cost Optimization review. Identify missing evidence explicitly.')}/>
     if(tab==='Reports') return (
@@ -273,10 +294,13 @@ export default function App(){
         generating={generatingReport}
         onAskAgent={()=>ask('Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.')}
         onOpenSchedules={()=>setTab('Anomalies')}
+        dashboard={dashboard}
+        onScan={scanResources}
+        scanning={scanning}
       />
     )
     return <Setup title="FinOps reports" text="Generate weekly, monthly, executive, or optimization-backlog reports from live evidence." action={()=>ask('Use live AWS data only. Generate a monthly executive FinOps report from available evidence and identify missing evidence explicitly.')}/>
-  },[tab,overview,recs,evidenceRuns,reports,selectedReport,generatingReport,diag,profilesData,policiesData,demo,persona,refreshing,scheduleConfig,runningSweep,sweepResult])
+  },[tab,overview,recs,evidenceRuns,reports,selectedReport,generatingReport,diag,profilesData,policiesData,demo,persona,refreshing,scheduleConfig,runningSweep,sweepResult,dashboard,scanning,timeRange,tagFilter])
 
   const activeIdentity = overview?.callerIdentity || diag?.callerIdentity
 
@@ -291,7 +315,7 @@ export default function App(){
               </div>
               <div>
                 <div className="leading-tight">AWS FinOps Studio</div>
-                <div className="text-[10px] text-muted uppercase tracking-wider font-mono">v0.1.1 · Read-Only</div>
+                <div className="text-[10px] text-muted uppercase tracking-wider font-mono">v1.0.0 · AWS Read-Only</div>
               </div>
             </div>
             <p className="text-xs text-muted mt-2">Deterministic financial engineering & evidence</p>
@@ -489,7 +513,7 @@ function ApprovalPanel({onRefresh,refreshing}:{onRefresh:()=>void;refreshing:boo
   )
 }
 
-function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTimeRange,tagFilter,setTagFilter}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean,timeRange:string,setTimeRange:any,tagFilter:string,setTagFilter:any}){
+function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTimeRange,tagFilter,setTagFilter,dashboard,onScan,scanning}:{data:Overview;persona:Persona;onAsk:(x:string)=>void;onRefresh:()=>void;refreshing:boolean;timeRange:string;setTimeRange:(v:string)=>void;tagFilter:string;setTagFilter:(v:string)=>void;dashboard:DashboardData|null;onScan:()=>void;scanning:boolean}){
   const previous=data.live?.previousMonth,current=data.live?.monthToDate
   return (
     <div className="px-6 py-6 space-y-4">
@@ -513,37 +537,37 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
             <tr>
               <td className="py-2">Elastic IPs</td>
               <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedEips ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EC2 Instances</td>
               <td className="py-2"><Badge tone="info">Stopped</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.stoppedInstances ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EBS Volumes</td>
               <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedVolumes ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">AWS Resources</td>
               <td className="py-2"><Badge tone="info">Untagged</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.untaggedResources ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
             <tr>
               <td className="py-2">AWS Budgets</td>
               <td className="py-2"><Badge tone="critical">Breached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.budgets?.filter(b=>b.breached).length ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
           </tbody>
         </table>
         <div className="mt-3 flex justify-end">
-          <button className="text-xs text-accent hover:underline">Scan Now</button>
+          <button onClick={onScan} disabled={scanning} className="text-xs text-accent hover:underline disabled:opacity-50">{scanning?'Scanning all resources…':'Scan Now'}</button>
         </div>
       </Card>
 
@@ -579,6 +603,7 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
             >
               <option value="7">Last 7 Days</option>
               <option value="30">Last 30 Days</option>
+              <option value="90">Last 90 Days</option>
               <option value="last-month">Previous Calendar Month</option>
             </select>
           </div>
@@ -586,7 +611,7 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
             <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">Tag Filter</label>
             <input 
               type="text" 
-              placeholder="e.g. CostCenter=Alpha" 
+              placeholder="CostCenter=Alpha, Environment=Prod"
               value={tagFilter}
               onChange={e => setTagFilter(e.target.value)}
               className="text-xs bg-surface border border-border rounded-lg px-2 py-1.5 text-foreground outline-none min-w-[150px]"
@@ -599,6 +624,10 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
           </div>
         </div>
       </div>
+
+      {(dashboard?.tags?.length||0)>0 && <div className="flex flex-wrap gap-2">{dashboard!.tags.map(t=><Badge key={`${t.key}=${t.value}`} tone="info">{t.key}={t.value}</Badge>)}</div>}
+
+      {(dashboard?.budgets?.length||0)>0 && <Card><CardTitle>AWS Budgets</CardTitle><div className="mt-3 grid gap-2">{dashboard!.budgets.map(b=><div key={b.name} className="flex items-center justify-between text-sm border-b border-border pb-2"><span>{b.name}</span><span className={b.breached?'text-red-500':'text-foreground'}>{usd2(b.actual)} / {usd2(b.limit)} · {b.percentUsed.toFixed(1)}%</span></div>)}</div></Card>}
 
       {previous && <PeriodCards title="Previous complete month" data={previous} persona={persona}/>}
       {current && <PeriodCards title="Month to date" data={current} persona={persona}/>}
@@ -641,7 +670,7 @@ function LiveOverview({data,persona,onAsk,onRefresh,refreshing,timeRange,setTime
   )
 }
 
-function LiveDrivers({drivers,previous,onRefresh,refreshing}:{drivers:Driver[];previous:Driver[];onRefresh:()=>void;refreshing:boolean}){
+function LiveDrivers({drivers,previous,onRefresh,refreshing,dashboard}:{drivers:Driver[];previous:Driver[];onRefresh:()=>void;refreshing:boolean;dashboard:DashboardData|null}){
   return (
     <div className="px-6 py-6 space-y-4">
 
@@ -664,37 +693,37 @@ function LiveDrivers({drivers,previous,onRefresh,refreshing}:{drivers:Driver[];p
             <tr>
               <td className="py-2">Elastic IPs</td>
               <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedEips ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EC2 Instances</td>
               <td className="py-2"><Badge tone="info">Stopped</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.stoppedInstances ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EBS Volumes</td>
               <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedVolumes ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">AWS Resources</td>
               <td className="py-2"><Badge tone="info">Untagged</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.untaggedResources ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
             <tr>
               <td className="py-2">AWS Budgets</td>
               <td className="py-2"><Badge tone="critical">Breached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.budgets?.filter(b=>b.breached).length ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
           </tbody>
         </table>
         <div className="mt-3 flex justify-end">
-          <button className="text-xs text-accent hover:underline">Scan Now</button>
+          <button onClick={onRefresh} disabled={refreshing} className="text-xs text-accent hover:underline disabled:opacity-50">Refresh cost evidence</button>
         </div>
       </Card>
 
@@ -817,6 +846,7 @@ function Recommendations({
   onSwitchToDemo,
   onRefresh,
   refreshing
+  ,dashboard
 }: {
   items: Rec[]
   title: string
@@ -824,6 +854,7 @@ function Recommendations({
   onSwitchToDemo: () => void
   onRefresh: () => void
   refreshing: boolean
+  dashboard:DashboardData|null
 }){
   return (
     <div className="px-6 py-6 space-y-4">
@@ -847,37 +878,37 @@ function Recommendations({
             <tr>
               <td className="py-2">Elastic IPs</td>
               <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedEips ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EC2 Instances</td>
               <td className="py-2"><Badge tone="info">Stopped</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.stoppedInstances ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EBS Volumes</td>
               <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedVolumes ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">AWS Resources</td>
               <td className="py-2"><Badge tone="info">Untagged</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.untaggedResources ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
             <tr>
               <td className="py-2">AWS Budgets</td>
               <td className="py-2"><Badge tone="critical">Breached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.budgets?.filter(b=>b.breached).length ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
           </tbody>
         </table>
         <div className="mt-3 flex justify-end">
-          <button className="text-xs text-accent hover:underline">Scan Now</button>
+          <button onClick={onRefresh} disabled={refreshing} className="text-xs text-accent hover:underline disabled:opacity-50">Refresh optimization evidence</button>
         </div>
       </Card>
 
@@ -1792,6 +1823,28 @@ function Drivers({items}:{items:Overview['drivers']}){
   )
 }
 
+function PortfolioView({profiles,timeRange,tags}:{profiles:string[];timeRange:string;tags:string}){
+  const api=useAppApi(); const [selected,setSelected]=useState<string[]>(profiles); const [combine,setCombine]=useState(true); const [data,setData]=useState<any>(null); const [loading,setLoading]=useState(false); const [error,setError]=useState('')
+  useEffect(()=>{setSelected(profiles)},[profiles.join('|')])
+  const run=async()=>{setLoading(true);setError('');try{setData(await api.post('/apps/aws-finops-studio/api/portfolio',{profiles:selected,timeRange,tags,combine}))}catch(e:any){setError(e.message||'Portfolio query failed')}finally{setLoading(false)}}
+  return <div className="px-6 py-6 space-y-4"><PageHeader title="Multi-account portfolio" description="Compare selected AWS CLI profiles and optionally combine profiles that resolve to the same AWS account."/><Card><div className="flex flex-wrap gap-2">{profiles.map(p=><label key={p} className="flex items-center gap-2 text-xs border border-border rounded-lg px-2 py-1.5"><input type="checkbox" checked={selected.includes(p)} onChange={e=>setSelected(e.target.checked?[...selected,p]:selected.filter(x=>x!==p))}/>{p}</label>)}</div><label className="flex items-center gap-2 text-xs mt-3"><input type="checkbox" checked={combine} onChange={e=>setCombine(e.target.checked)}/>Combine profiles belonging to the same AWS account</label><div className="mt-3"><Btn onClick={run} disabled={loading||selected.length===0}>{loading?'Loading portfolio…':'Load portfolio'}</Btn></div>{error&&<div className="text-xs text-red-500 mt-2">{error}</div>}</Card>{data&&<><div className="grid sm:grid-cols-2 gap-3"><StatCard label="Current period total" value={usd2(data.totalCurrent)}/><StatCard label="Previous period total" value={usd2(data.totalPrevious)}/></div><Card><CardTitle>Profiles and accounts</CardTitle><div className="mt-3 overflow-auto"><table className="w-full text-xs"><thead><tr className="text-left border-b border-border"><th className="py-2">Profile</th><th>Account</th><th className="text-right">Previous</th><th className="text-right">Current</th><th className="text-right">Change</th></tr></thead><tbody>{data.rows.map((r:any)=><tr key={r.profile} className="border-b border-border"><td className="py-2 font-medium">{r.profile}</td><td>{r.accountMasked}</td><td className="text-right">{usd2(r.previousCost)}</td><td className="text-right">{usd2(r.currentCost)}</td><td className="text-right">{r.changePercent==null?'N/A':`${r.changePercent.toFixed(1)}%`}</td></tr>)}</tbody></table></div></Card></>}</div>
+}
+
+function TrendPanel({data}:{data:DashboardData['trend']}){
+  const max=Math.max(1,...data.map(x=>Number(x.cost)))
+  return <div className="px-6 pb-6"><Card><CardTitle>Six-month cost trend</CardTitle>{data.length===0?<EmptyState title="No trend data" description="Refresh live data or verify Cost Explorer permissions."/>:<div className="mt-5 flex items-end gap-3 h-52">{data.map(x=><div key={x.start} className="flex-1 min-w-0 flex flex-col justify-end h-full"><div className="text-[10px] text-center text-muted mb-1">{usd2(x.cost)}</div><div className="bg-accent/80 rounded-t-md min-h-[3px]" style={{height:`${Math.max(3,Number(x.cost)/max*150)}px`}}/><div className="text-[10px] text-center text-muted mt-2 truncate">{new Date(`${x.start}T00:00:00`).toLocaleDateString(undefined,{month:'short'})}</div></div>)}</div>}</Card></div>
+}
+
+function ResourceTable({title,items}:{title:string;items:any[]}){
+  return <Card><div className="flex items-center justify-between"><CardTitle>{title}</CardTitle><Badge tone={items.length?'warning':'success'}>{items.length}</Badge></div>{items.length===0?<p className="text-sm text-muted mt-3">No findings.</p>:<div className="mt-3 max-h-72 overflow-auto divide-y divide-border">{items.map((x,i)=><div key={`${x.type}-${x.id}-${i}`} className="py-2 text-xs flex justify-between gap-3"><span className="font-mono text-foreground">{x.id}</span><span className="text-muted">{x.type} · {x.region}{x.state?` · ${x.state}`:''}{x.sizeGiB?` · ${x.sizeGiB} GiB`:''}</span></div>)}</div>}</Card>
+}
+
+function ResourcesView({data,onScan,scanning}:{data:DashboardData|null;onScan:(regions?:string[])=>void;scanning:boolean}){
+  const audit=data?.audit; const [regions,setRegions]=useState<string[]>(data?.selectedRegions||[])
+  useEffect(()=>{if(data?.selectedRegions?.length&&!regions.length)setRegions(data.selectedRegions)},[data?.selectedRegions?.join('|')])
+  return <div className="px-6 py-6 space-y-4"><PageHeader title="Resource inventory & hygiene audit" description="Live, read-only discovery across the selected AWS profile and regions."/><Card><div className="text-xs font-semibold mb-2">Regions</div><div className="flex flex-wrap gap-2 max-h-32 overflow-auto">{data?.availableRegions?.map(r=><label key={r} className="flex items-center gap-1 text-[11px] border border-border rounded px-2 py-1"><input type="checkbox" checked={regions.includes(r)} onChange={e=>setRegions(e.target.checked?[...regions,r]:regions.filter(x=>x!==r))}/>{r}</label>)}</div><div className="flex flex-wrap items-center justify-between gap-3 mt-3"><div className="text-xs text-muted">Profile: <strong>{data?.profile||'—'}</strong> · {regions.length} region(s)</div><Btn onClick={()=>onScan(regions)} disabled={scanning||regions.length===0}>{scanning?'Scanning AWS resources…':'Run resource audit'}</Btn></div></Card>{!audit?<EmptyState title="Audit not run" description="Run the audit to discover EC2 state, unattached EBS volumes, unused Elastic IPs, and untagged resources."/>:<><div className="grid sm:grid-cols-3 gap-3"><StatCard label="Running EC2" value={String(audit.ec2Summary?.running||0)}/><StatCard label="Stopped EC2" value={String(audit.counts.stoppedInstances||0)}/><StatCard label="Partial failures" value={String(audit.errors?.length||0)}/></div><div className="grid lg:grid-cols-2 gap-4"><ResourceTable title="Stopped EC2 instances" items={audit.stoppedInstances}/><ResourceTable title="Unattached EBS volumes" items={audit.unusedVolumes}/><ResourceTable title="Unused Elastic IPs" items={audit.unusedEips}/><ResourceTable title="Untagged EC2, RDS, Lambda & ELB" items={audit.untaggedResources}/></div>{audit.errors?.length>0&&<Card><CardTitle>Partial scan errors</CardTitle><div className="mt-2 text-xs text-muted space-y-1">{audit.errors.map((e:any,i:number)=><div key={i}>{e.region} · {e.service}: {e.message}</div>)}</div></Card>}</>}</div>
+}
+
 function Setup({title,text,action}:{title:string;text:string;action:()=>void}){
   return (
     <div className="px-6 py-6">
@@ -1905,6 +1958,17 @@ function MarkdownViewer({ content }: { content: string }) {
   return <div className="space-y-1">{elements}</div>
 }
 
+function downloadText(filename:string,content:string,type:string){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
+
+function ExportCenter({data}:{data:DashboardData|null}){
+  const api=useAppApi(); const [bucket,setBucket]=useState(''); const [prefix,setPrefix]=useState('finops-reports'); const [channel,setChannel]=useState(''); const [status,setStatus]=useState(''); const [sending,setSending]=useState(false)
+  const payload=JSON.stringify(data||{},null,2); const filename=`aws-finops-${new Date().toISOString().slice(0,10)}.json`
+  const rows:any[]=[]; if(data?.audit){for(const [category,items] of Object.entries({stoppedInstances:data.audit.stoppedInstances,unusedVolumes:data.audit.unusedVolumes,unusedEips:data.audit.unusedEips,untaggedResources:data.audit.untaggedResources}))for(const item of items as any[])rows.push({category,...item})}
+  const csv=['category,type,id,region,state,sizeGiB',...rows.map(r=>[r.category,r.type,r.id,r.region,r.state||'',r.sizeGiB||''].map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(','))].join('\n')
+  const send=async(destination:'s3'|'slack')=>{if(!window.confirm(`Send this FinOps export to ${destination==='s3'?`s3://${bucket}/${prefix}`:`Slack channel ${channel}`}?`))return;setSending(true);setStatus('');try{const res:any=await api.post('/apps/aws-finops-studio/api/exports',{destination,filename,content:payload,contentType:'application/json',bucket,prefix,channel,profile:data?.profile});setStatus(`Delivered to ${res.location}`)}catch(e:any){setStatus(e.message||'Export failed')}finally{setSending(false)}}
+  return <Card><CardTitle>Export center</CardTitle><p className="text-xs text-muted mt-1">Download structured evidence locally or explicitly deliver it to S3 or Slack.</p><div className="flex flex-wrap gap-2 mt-4"><Btn onClick={()=>downloadText(filename,payload,'application/json')}>Download JSON</Btn><button onClick={()=>downloadText(filename.replace('.json','.csv'),csv,'text/csv')} className="px-3 py-1.5 rounded-lg border border-border text-xs">Download CSV</button><button onClick={()=>window.print()} className="px-3 py-1.5 rounded-lg border border-border text-xs">Print / PDF</button></div><div className="grid md:grid-cols-2 gap-4 mt-4"><div className="space-y-2"><div className="text-xs font-semibold">Amazon S3</div><input value={bucket} onChange={e=>setBucket(e.target.value)} placeholder="Bucket name" className="w-full text-xs bg-surface border border-border rounded-lg px-2 py-2"/><input value={prefix} onChange={e=>setPrefix(e.target.value)} placeholder="Optional prefix" className="w-full text-xs bg-surface border border-border rounded-lg px-2 py-2"/><button disabled={!bucket||sending} onClick={()=>send('s3')} className="px-3 py-1.5 rounded-lg bg-accent text-xs text-black disabled:opacity-50">Send to S3</button></div><div className="space-y-2"><div className="text-xs font-semibold">Slack</div><input value={channel} onChange={e=>setChannel(e.target.value)} placeholder="Channel ID (C012…)" className="w-full text-xs bg-surface border border-border rounded-lg px-2 py-2"/><p className="text-[10px] text-muted">Uses SLACK_BOT_TOKEN configured in KiroCrew.</p><button disabled={!channel||sending} onClick={()=>send('slack')} className="px-3 py-1.5 rounded-lg bg-accent text-xs text-black disabled:opacity-50">Send to Slack</button></div></div>{status&&<div className="text-xs mt-3 text-muted">{status}</div>}</Card>
+}
+
 function ReportsView({
   reports,
   selectedReport,
@@ -1912,7 +1976,10 @@ function ReportsView({
   onGenerate,
   generating,
   onAskAgent,
-  onOpenSchedules
+  onOpenSchedules,
+  dashboard,
+  onScan,
+  scanning
 }: {
   reports: any[];
   selectedReport: any | null;
@@ -1921,6 +1988,9 @@ function ReportsView({
   generating: string | null;
   onAskAgent: () => void;
   onOpenSchedules: () => void;
+  dashboard: DashboardData|null;
+  onScan:()=>void;
+  scanning:boolean;
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -1953,37 +2023,37 @@ function ReportsView({
             <tr>
               <td className="py-2">Elastic IPs</td>
               <td className="py-2"><Badge tone="info">Unused / Unattached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedEips ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EC2 Instances</td>
               <td className="py-2"><Badge tone="info">Stopped</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.stoppedInstances ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">EBS Volumes</td>
               <td className="py-2"><Badge tone="info">Available (Unattached)</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.unusedVolumes ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">$0.00</td>
             </tr>
             <tr>
               <td className="py-2">AWS Resources</td>
               <td className="py-2"><Badge tone="info">Untagged</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.audit?.counts?.untaggedResources ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
             <tr>
               <td className="py-2">AWS Budgets</td>
               <td className="py-2"><Badge tone="critical">Breached</Badge></td>
-              <td className="py-2 text-right">0</td>
+              <td className="py-2 text-right">{dashboard?.budgets?.filter(b=>b.breached).length ?? '—'}</td>
               <td className="py-2 text-right text-foreground font-mono">N/A</td>
             </tr>
           </tbody>
         </table>
         <div className="mt-3 flex justify-end">
-          <button className="text-xs text-accent hover:underline">Scan Now</button>
+          <button onClick={onScan} disabled={scanning} className="text-xs text-accent hover:underline disabled:opacity-50">{scanning?'Scanning…':'Scan Now'}</button>
         </div>
       </Card>
 
@@ -2072,6 +2142,7 @@ function ReportsView({
 
   return (
     <div className="px-6 py-6 space-y-6">
+      <ExportCenter data={dashboard}/>
       <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-surface-muted/50 border border-border">
         <div>
           <h2 className="text-base font-semibold text-foreground">FinOps Reports & Executive Archive</h2>
@@ -2159,4 +2230,3 @@ function ReportsView({
     </div>
   )
 }
-

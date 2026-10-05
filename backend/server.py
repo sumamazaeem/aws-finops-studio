@@ -4,7 +4,12 @@ from datetime import datetime, date, timedelta, timezone
 from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.request import Request, urlopen
+try:
+    from .aws_dashboard import audit as run_resource_audit, budgets as load_budgets, cost_filter, list_regions, parse_tags, trend as load_trend
+except ImportError:
+    from aws_dashboard import audit as run_resource_audit, budgets as load_budgets, cost_filter, list_regions, parse_tags, trend as load_trend
 try: from kiro_crew.apps.proxy_auth import verify_proxy_request
 except ImportError: verify_proxy_request=None
 try:
@@ -100,19 +105,9 @@ def _run_cost_query(start,end,group_key,exclude_adjustments=False,profile=None,r
     env={**os.environ,"AWS_PROFILE":profile,"AWS_REGION":region}
     command=[aws,"ce","get-cost-and-usage","--profile",profile,"--region",region,"--time-period",f"Start={start.isoformat()},End={end.isoformat()}","--granularity","MONTHLY","--metrics","UnblendedCost","--group-by",f"Type=DIMENSION,Key={group_key}","--output","json"]
     
-    filters = []
-    if exclude_adjustments:
-        filters.append({"Not":{"Dimensions":{"Key":"RECORD_TYPE","Values":["Credit","Refund"]}}})
-    if tag_filter:
-        parts = tag_filter.split('=')
-        if len(parts) == 2:
-            filters.append({"Tags": {"Key": parts[0].strip(), "Values": [parts[1].strip()]}})
-            
-    if filters:
-        if len(filters) > 1:
-            command.extend(["--filter",json.dumps({"And": filters})])
-        else:
-            command.extend(["--filter",json.dumps(filters[0])])
+    filter_value = cost_filter(tag_filter, exclude_adjustments)
+    if filter_value:
+        command.extend(["--filter",json.dumps(filter_value)])
             
     completed=subprocess.run(command,capture_output=True,text=True,timeout=45,env=env,check=False)
     if completed.returncode: raise RuntimeError((completed.stderr or "Cost Explorer request failed").strip()[:500])
@@ -349,16 +344,16 @@ def get_policy_templates():
 def refresh_live_cost_overview(time_range="30", tag_filter=None):
     now=time.time()
     today=date.today()
-    if str(time_range) == "7":
-        previous_start = today - timedelta(days=14)
-        current_start = today - timedelta(days=7)
+    if str(time_range) in {"7", "30", "90"}:
+        days = int(time_range)
+        previous_start = today - timedelta(days=days * 2)
+        current_start = today - timedelta(days=days)
     elif str(time_range) == "last-month":
         current_start = _previous_month_start(today)
         previous_start = _previous_month_start(current_start)
         today = _month_start(today) - timedelta(days=1) # end of last month
-    else: # default 30
-        previous_start = today - timedelta(days=60)
-        current_start = today - timedelta(days=30)
+    else:
+        raise ValueError("timeRange must be 7, 30, 90, or last-month")
         
     end=today+timedelta(days=1)
     
@@ -371,7 +366,8 @@ def refresh_live_cost_overview(time_range="30", tag_filter=None):
 
     
     # Hash raw query payload for immutable provenance
-    raw_bytes=json.dumps({"records":raw_records,"services":raw_services,"profile":profile,"region":region},sort_keys=True).encode()
+    normalized_tags=parse_tags(tag_filter)
+    raw_bytes=json.dumps({"records":raw_records,"services":raw_services,"profile":profile,"region":region,"timeRange":str(time_range),"tags":normalized_tags},sort_keys=True).encode()
     payload_hash=hashlib.sha256(raw_bytes).hexdigest()
     run_id=f"run_{today.strftime('%Y%m%d')}_{int(now)}_{payload_hash[:8]}"
 
@@ -391,7 +387,9 @@ def refresh_live_cost_overview(time_range="30", tag_filter=None):
         "metrics":["UnblendedCost"],
         "groupBy":["RECORD_TYPE","SERVICE"],
         "profile":profile,
-        "region":region
+        "region":region,
+        "timeRange":str(time_range),
+        "tags":normalized_tags
     }
 
     payload={
@@ -409,6 +407,8 @@ def refresh_live_cost_overview(time_range="30", tag_filter=None):
         "groupBy":"RECORD_TYPE and SERVICE",
         "profile":profile,
         "region":region,
+        "timeRange":str(time_range),
+        "tags":normalized_tags,
         "refreshedAt":today.isoformat(),
         "querySpec":query_spec
     }
@@ -422,6 +422,70 @@ def refresh_live_cost_overview(time_range="30", tag_filter=None):
 
     _LIVE_CACHE.update(at=now,payload=payload)
     return payload
+
+def dashboard_snapshot(profile=None, regions=None, tags=None, include_audit=False):
+    scope=get_active_scope(); profile=profile or scope["profile"]
+    identity=_get_caller_identity(profile, scope["region"])
+    available_regions=list_regions(profile, scope["region"])
+    selected_regions=[r for r in (regions or [scope["region"]]) if r in available_regions]
+    if not selected_regions: selected_regions=[scope["region"]]
+    result={"profile":profile,"identity":identity,"availableRegions":available_regions,"selectedRegions":selected_regions,"tags":parse_tags(tags),"budgets":[],"trend":[],"audit":None,"errors":[]}
+    try: result["budgets"]=load_budgets(profile,identity.get("account"),scope["region"])
+    except Exception as exc: result["errors"].append({"service":"Budgets","message":str(exc)})
+    try: result["trend"]=load_trend(profile,tags,scope["region"])
+    except Exception as exc: result["errors"].append({"service":"Cost Explorer trend","message":str(exc)})
+    if include_audit: result["audit"]=run_resource_audit(profile,selected_regions)
+    return result
+
+def portfolio_snapshot(profiles, time_range="30", tags=None, combine=False):
+    profiles=[p for p in profiles if p in list_aws_profiles()]
+    if not profiles: raise ValueError("Select at least one configured AWS profile")
+    today=date.today(); days=int(time_range) if str(time_range) in {"7","30","90"} else None
+    if str(time_range)=="last-month": current_start=_previous_month_start(today); current_end=_month_start(today); previous_start=_previous_month_start(current_start)
+    elif days: current_start=today-timedelta(days=days); current_end=today+timedelta(days=1); previous_start=current_start-timedelta(days=days)
+    else: raise ValueError("timeRange must be 7, 30, 90, or last-month")
+    rows=[]; seen_accounts=set()
+    for profile in profiles:
+        scope=get_active_scope(); identity=_get_caller_identity(profile,scope["region"]); account=identity.get("account") or profile
+        if combine and account in seen_accounts: continue
+        seen_accounts.add(account)
+        raw=_run_cost_query(previous_start,current_end,"RECORD_TYPE",profile=profile,region=scope["region"],tag_filter=tags)
+        periods=[_record_type_period(x) for x in raw]
+        previous=sum((Decimal(p["netCost"]) for p in periods if p["start"]<current_start.isoformat()),Decimal("0"))
+        current=sum((Decimal(p["netCost"]) for p in periods if p["start"]>=current_start.isoformat()),Decimal("0"))
+        rows.append({"profile":profile,"account":account,"accountMasked":identity.get("accountMasked"),"previousCost":str(previous),"currentCost":str(current),"changePercent":percent_change(current,previous),"verified":identity.get("verified",False)})
+    return {"rows":rows,"profiles":profiles,"combined":bool(combine),"timeRange":str(time_range),"tags":parse_tags(tags),"totalCurrent":str(sum((Decimal(r["currentCost"]) for r in rows),Decimal("0"))),"totalPrevious":str(sum((Decimal(r["previousCost"]) for r in rows),Decimal("0")))}
+
+def deliver_export(data):
+    destination=data.get("destination"); filename=Path(data.get("filename") or "aws-finops-report.json").name
+    content=str(data.get("content") or "").encode(); content_type=data.get("contentType") or "application/json"
+    if len(content)>5_000_000: raise ValueError("Export is limited to 5 MB")
+    if destination=="s3":
+        bucket=str(data.get("bucket") or "").strip(); prefix=str(data.get("prefix") or "").strip().strip("/")
+        if not bucket: raise ValueError("S3 bucket is required")
+        profile=str(data.get("profile") or get_active_scope()["profile"]); key=f"{prefix}/{filename}" if prefix else filename
+        aws=shutil.which("aws");
+        if not aws: raise RuntimeError("AWS CLI is unavailable")
+        command=[aws,"s3","cp","-",f"s3://{bucket}/{key}","--profile",profile,"--content-type",content_type,"--no-progress"]
+        completed=subprocess.run(command,input=content,capture_output=True,timeout=60,check=False)
+        if completed.returncode: raise RuntimeError(completed.stderr.decode(errors="replace")[:700])
+        return {"ok":True,"location":f"s3://{bucket}/{key}"}
+    if destination=="slack":
+        token=os.environ.get("SLACK_BOT_TOKEN"); channel=str(data.get("channel") or "").strip()
+        if not token: raise RuntimeError("SLACK_BOT_TOKEN is not configured in the KiroCrew container")
+        if not channel: raise ValueError("Slack channel ID is required")
+        headers={"Authorization":f"Bearer {token}","Content-Type":"application/x-www-form-urlencoded"}
+        request=Request("https://slack.com/api/files.getUploadURLExternal",data=urlencode({"filename":filename,"length":len(content)}).encode(),headers=headers)
+        with urlopen(request,timeout=45) as response: upload=json.loads(response.read())
+        if not upload.get("ok"): raise RuntimeError(f"Slack export failed: {upload.get('error','upload URL unavailable')}")
+        upload_request=Request(upload["upload_url"],data=content,method="POST",headers={"Content-Type":content_type})
+        with urlopen(upload_request,timeout=45) as response: response.read()
+        complete_body=urlencode({"files":json.dumps([{"id":upload["file_id"],"title":filename}]),"channel_id":channel,"initial_comment":"AWS FinOps Studio export"}).encode()
+        complete_request=Request("https://slack.com/api/files.completeUploadExternal",data=complete_body,headers=headers)
+        with urlopen(complete_request,timeout=45) as response: result=json.loads(response.read())
+        if not result.get("ok"): raise RuntimeError(f"Slack export failed: {result.get('error','completion failed')}")
+        return {"ok":True,"location":f"slack:{channel}","fileId":upload["file_id"]}
+    raise ValueError("destination must be s3 or slack")
 
 def live_cost_overview():
     scope=get_active_scope()
@@ -1091,7 +1155,7 @@ class Handler(BaseHTTPRequestHandler):
         parsed=urlparse(self.path); route=parsed.path.removeprefix("/api") or "/"; requested=parse_qs(parsed.query).get("mode",["live"])[0]; mode="demo" if requested=="demo" else "live"
         routes={
             "/health":lambda:{"status":"ok","app":APP_NAME},
-            "/status":lambda:{"app":APP_NAME,"version":"0.1.1","readOnly":True,"mode":mode},
+            "/status":lambda:{"app":APP_NAME,"version":"1.0.0","readOnly":True,"mode":mode},
             "/overview":lambda:overview(mode),
             "/recommendations":lambda:{"mode":mode,"items":fetch_live_recommendations() if mode=="live" else recommendations(mode)},
             "/evidence":lambda:{"runs":list_evidence_runs()},
@@ -1110,6 +1174,11 @@ class Handler(BaseHTTPRequestHandler):
             },
             "/schedules": get_schedule_config
         }
+        if route=="/dashboard":
+            query=parse_qs(parsed.query); profile=(query.get("profile") or [None])[0]
+            regions=[x for value in query.get("regions",[]) for x in value.split(",") if x]
+            tags=(query.get("tags") or [None])[0]
+            self.reply(200,dashboard_snapshot(profile,regions,tags,False)); return
         fn=routes.get(route); self.reply(200,fn()) if fn else self.reply(404,{"error":"not found"})
     def do_POST(self):
         body=self.rfile.read(min(int(self.headers.get("Content-Length","0")),1_000_000))
@@ -1138,6 +1207,25 @@ class Handler(BaseHTTPRequestHandler):
                 })
             except Exception as exc:
                 self.reply(400, {"error": str(exc)})
+            return
+        elif route=="/audit":
+            try:
+                data=json.loads(body) if body else {}; scope=get_active_scope()
+                profile=data.get("profile") or scope["profile"]
+                regions=data.get("regions") or [scope["region"]]
+                self.reply(200,run_resource_audit(profile,regions))
+            except Exception as exc:
+                self.reply(502,{"error":str(exc)})
+            return
+        elif route=="/portfolio":
+            try:
+                data=json.loads(body) if body else {}
+                self.reply(200,portfolio_snapshot(data.get("profiles") or list_aws_profiles(),data.get("timeRange","30"),data.get("tags"),bool(data.get("combine"))))
+            except Exception as exc: self.reply(502,{"error":str(exc)})
+            return
+        elif route=="/exports":
+            try: self.reply(200,deliver_export(json.loads(body) if body else {}))
+            except Exception as exc: self.reply(502,{"error":str(exc)})
             return
         elif route=="/calculate":
             try:
